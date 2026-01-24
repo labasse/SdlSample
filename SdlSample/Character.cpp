@@ -6,43 +6,30 @@
 #define ANIM_WIDTH   128.f
 #define ANIM_HEIGHT  128.f
 
-#define ANIM_FRAMES_IDLE 2
-#define ANIM_FRAMES_WALK 9
-#define ANIM_FRAMES_JUMP 2
-#define ANIM_FRAMES_FALL 2
-#define ANIM_FRAMES_RUN  8
+#define JUMPFALL_DURATION 400
 
-#define ANIM_DELAY_IDLE 300
-#define ANIM_DELAY_WALK 100
-#define ANIM_DELAY_RUN  70
-#define ANIM_DELAY_JUMP 70
-#define ANIM_DELAY_FALL	100
+const struct 
+{
+	int GetFrame(Uint64 deltaTime) const 
+	{
+		int frame = (int)deltaTime / frameDelay;
+		return loop ? frame % frameCount : std::min(frame, frameCount - 1);
+	}
 
-#define DURATION_JUMP 400
-#define DURATION_FALL 400
-
-enum AnimRow {
-	SPELLCAST = 0,
-	THRUST = 4,
-	WALK = 8,
-	SLASH = 12,
-	SHOOT = 16,
-	HURT = 20,
-	CLIMB = 21,
-	IDLE = 22,
-	JUMP = 26,
-	FALL = 30,
-	EMOTE = 34,
-	RUN = 38,
-	WATERING = 42
+	int row, frameDelay, frameCount	; bool loop;
+} Anims[] = {
+	{	22	, 300		, 2			, true	},	// IDLE
+	{	8	, 100		, 9			, true	},	// WALK
+	{	38	, 70		, 8			, true	},	// RUN
+	{	26	, 70		, 2			, false	},	// JUMP
+	{	30	, 100		, 2			, false	}	// FALL
 };
 
-
 Character::Character(const Controller& controller, SDL_Texture *anims) : 
-	state(CHSTATE_IDLE), 
-	dir(CHDIR_SOUTH), 
+	state(State::IDLE), 
+	dir(Dir::SOUTH), 
 	x(1000), y(0), speed(0), 
-	animStartTime(0),
+	stateStartTime(0),
 	ctrl(controller), anims(anims),
 	updateTime(SDL_GetTicks())
 {
@@ -53,97 +40,64 @@ void Character::Update(Uint64 time)
 	State newState = state;	
 
 	switch(state) {
-		case CHSTATE_IDLE:
+		case State::IDLE:
 			if (ctrl.IsDirectionPressed())
 			{
-				newState = CHSTATE_RUNNING;
+				newState = State::RUNNING;
 				speed = ctrl.IsLeftPressed() ? -.2f : .2f;
 			}
 			break;
-		case CHSTATE_RUNNING:
-		case CHSTATE_WALKING:
+		case State::RUNNING:
+		case State::WALKING:
 			if (ctrl.IsJumpPressed())
 			{
-				newState = CHSTATE_JUMPING;
+				newState = State::JUMPING;
 			}
-			else if (speed > 0 && !ctrl.IsRightPressed() || speed<0 && !ctrl.IsLeftPressed())
+			else if (DirectionwiseTest(!ctrl.IsLeftPressed(), !ctrl.IsRightPressed()))
 			{
-				newState = CHSTATE_IDLE;
+				newState = State::IDLE;
 			}
 			x += (int)(speed * (float)(time - updateTime));
 			break;
-		case CHSTATE_JUMPING: {
-			if ((time - animStartTime) > DURATION_JUMP)
-			{
-				newState = CHSTATE_FALLING;
-			}
-			int delta = (int)(speed * (float)(time - updateTime));
-
-			x += delta;
-			y -= std::abs(delta);
+		case State::JUMPING: 
+			newState = UpdateJumpFall(time, State::FALLING, Dir::NORTH);
 			break;
-		}
-		case CHSTATE_FALLING: {
-			if ((time - animStartTime) > DURATION_FALL)
-			{
-				newState = CHSTATE_IDLE;
-			}
-			int delta = (int)(speed * (float)(time - updateTime));
-
-			x += delta;
-			y += std::abs(delta);
+		case State::FALLING: {
+			newState = UpdateJumpFall(time, State::IDLE   , Dir::SOUTH);
 			break;
 		}
 	}
 	if (state != newState)
 	{
 		state = newState;
-		animStartTime = time;
+		stateStartTime = time;
 	}
 	updateTime = time;
 }
 
+Character::State Character::UpdateJumpFall(Uint64 time, Character::State nextState, Character::Dir yDir)
+{
+	int delta = (int)(speed * (float)(time - updateTime));
+
+	x += delta;
+	y += DirectionwiseTest(yDir== Dir::SOUTH, yDir==Dir::NORTH) ? -delta : delta;
+	return (time - stateStartTime) > JUMPFALL_DURATION ? nextState : state;
+}
+
 void Character::Render(SDL_Renderer* renderer)
 {
-	SDL_FRect rcdAnim = { 
+	ASSERT(State::IDLE <= state && state < State::COUNT);
+	const auto& anim = Anims[(int)state];
+	static const SDL_FRect rcdAnim = {
 		(SCREEN_WIDTH  - ANIM_WIDTH ) / 2, 
 		(SCREEN_HEIGHT - ANIM_HEIGHT) / 2, 
 		ANIM_WIDTH, 
 		ANIM_HEIGHT 
 	};
 	SDL_FRect rcsAnim = rcdAnim;
-	int row, frame;
 
-	switch (state)
-	{
-	case CHSTATE_JUMPING: 
-		row   = AnimRow::JUMP;
-		frame = GetAnimFrame(ANIM_DELAY_JUMP, ANIM_FRAMES_JUMP, false);
-		break;
-	case CHSTATE_FALLING:
-		row = AnimRow::FALL;
-		frame = GetAnimFrame(ANIM_DELAY_FALL, ANIM_FRAMES_FALL, false);
-		break;
-	case CHSTATE_WALKING:
-		row = AnimRow::WALK;
-		frame = GetAnimFrame(ANIM_DELAY_WALK, ANIM_FRAMES_WALK, true);
-		break;
-	case CHSTATE_RUNNING:
-		row   = AnimRow::RUN;
-		frame = GetAnimFrame(ANIM_DELAY_RUN, ANIM_FRAMES_RUN, true);
-		break;
-	default:
-		row   = AnimRow::IDLE;
-		frame = GetAnimFrame(ANIM_DELAY_IDLE, ANIM_FRAMES_IDLE, true);
-		break;
-	}
-	rcsAnim.x = ANIM_WIDTH  * frame;
-	rcsAnim.y = ANIM_HEIGHT * (row + (speed < 0 ? CHDIR_WEST : CHDIR_EAST));
+	rcsAnim.x = ANIM_WIDTH  * anim.GetFrame(updateTime - stateStartTime);
+	rcsAnim.y = ANIM_HEIGHT * (anim.row + (int)(speed < 0 ? Dir::WEST : Dir::EAST));
 
 	SDL_RenderTexture(renderer, anims, &rcsAnim, &rcdAnim);
-}
-
-int Character::GetAnimFrame(int delay, int frame_count, bool loop) const {
-	int frame = (int)(updateTime - animStartTime) / delay;
-	return loop ? frame % frame_count : std::min(frame, frame_count-1);
 }

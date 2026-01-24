@@ -29,26 +29,32 @@ public:
     inline int GetY() const;
 
 private:
-    enum State {
-        CHSTATE_IDLE,
-        CHSTATE_WALKING,
-        CHSTATE_JUMPING,
-		CHSTATE_FALLING,
-        CHSTATE_RUNNING
+    enum class State {
+        IDLE,
+        WALKING,
+        RUNNING,
+        JUMPING,
+		FALLING,
+		// Add new states above this line
+		COUNT
     } state;
 
-    enum Dir {
-        CHDIR_NORTH, 
-        CHDIR_WEST, 
-        CHDIR_SOUTH, 
-        CHDIR_EAST
+    enum class Dir {
+        NORTH, 
+        WEST, 
+        SOUTH, 
+        EAST
     } dir;
 
-    int GetAnimFrame(int delay, int frame_count, bool loop) const;
+    State UpdateJumpFall(Uint64 time, State nextState, Dir yDir);
+    
+    bool DirectionwiseTest(bool westCondition, bool eastCondition) const {
+        return speed < 0 && westCondition || speed > 0 && eastCondition ;
+	}
 
     int x, y;
     float speed;
-    Uint64 animStartTime, updateTime;
+    Uint64 stateStartTime, updateTime;
 	const Controller& ctrl;
 	SDL_Texture* anims;
 };
