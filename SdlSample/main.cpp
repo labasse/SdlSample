@@ -7,7 +7,7 @@
 #include "Character.h"
 
 #define FRAME_DURATION 16
-#define MAX_IMAGES      7
+#define MAX_IMAGES      8
 #define PARALLAX_LAYERS 6
 
 const char* ImageFiles[MAX_IMAGES] = {
@@ -17,7 +17,8 @@ const char* ImageFiles[MAX_IMAGES] = {
     "assets/bg3.png",
     "assets/bg4.png",
     "assets/bg5.png",
-    "assets/anims.png"
+    "assets/anims.png",
+	"assets/objs.png"
 };
 
 enum ImageIndices {
@@ -31,13 +32,12 @@ void ThrowSdl(void* ptr);
 Uint64 Throttle(Uint64 frame_start, Uint64 frame_duration);
 
 bool Update(Uint64 frame_start);
-void ParallaxRender(SDL_Renderer* renderer, SDL_Texture* textures[], int povX);
+void ParallaxRender(SDL_Renderer* renderer, SDL_Texture* textures[], int povX, int povY);
 
 int main(int argc, char *argv[])
 {
     SDL_Window   * wnd = nullptr;
     SDL_Renderer * bck = nullptr;
-	SDL_Surface* surfaces[MAX_IMAGES] = { nullptr };
 	SDL_Texture* textures[MAX_IMAGES] = { nullptr };
     
     try
@@ -48,8 +48,11 @@ int main(int argc, char *argv[])
         ThrowSdl(bck = SDL_CreateRenderer(wnd, nullptr));
         for (int i = 0; i < MAX_IMAGES; ++i)
         {
-            ThrowSdl(surfaces[i] = SDL_LoadSurface(ImageFiles[i]));
-            ThrowSdl(textures[i] = SDL_CreateTextureFromSurface(bck, surfaces[i]));
+			SDL_Surface *surface;
+
+            ThrowSdl(surface = SDL_LoadSurface(ImageFiles[i]));
+            ThrowSdl(textures[i] = SDL_CreateTextureFromSurface(bck, surface));
+			SDL_DestroySurface(surface);
         }
         KeyboardController controller;
         Character character(controller, textures[IMG_ANIMS]);
@@ -61,7 +64,7 @@ int main(int argc, char *argv[])
 			controller.Update(frame_start);
 			character .Update(frame_start);
 
-			ParallaxRender(bck, textures, character.GetX());
+			ParallaxRender(bck, textures, character.GetX(), character.GetY());
 			character.Render(bck);
             SDL_RenderPresent(bck);
         }
@@ -70,10 +73,9 @@ int main(int argc, char *argv[])
     {
         std::cerr << "Error: " << e.what() << std::endl;
 	}
-    for (int i = 0; i < MAX_IMAGES; ++i)
+    for (auto texture : textures)
     {
-        SDL_DestroyTexture(textures[i]);
-        SDL_DestroySurface(surfaces[i]);
+        SDL_DestroyTexture(texture);
     }
     SDL_DestroyRenderer(bck);
     SDL_DestroyWindow  (wnd);
@@ -109,7 +111,7 @@ bool Update(Uint64 frame_start)
 	return event.type != SDL_EVENT_QUIT;
 }
 
-void ParallaxRender(SDL_Renderer* renderer, SDL_Texture* textures[], int povX)
+void ParallaxRender(SDL_Renderer* renderer, SDL_Texture* textures[], int povX, int povY)
 {
     SDL_FRect rcdParallax = { 0.0f, 0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT };
     int iLayers;
@@ -120,6 +122,7 @@ void ParallaxRender(SDL_Renderer* renderer, SDL_Texture* textures[], int povX)
     for (; iLayers < PARALLAX_LAYERS; ++iLayers)
     {
         rcdParallax.x = -(float)((povX / (1 << (PARALLAX_LAYERS - iLayers - 1))) % SCREEN_WIDTH);
+        rcdParallax.y = -(float)(povY / (1 << (PARALLAX_LAYERS - iLayers - 1)));
         for (int j = 0; j < 2; ++j)
         {
             SDL_RenderTexture(renderer, textures[IMG_PARALLAX + iLayers], nullptr, &rcdParallax);

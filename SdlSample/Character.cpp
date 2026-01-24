@@ -3,19 +3,23 @@
 
 #include "Character.h"
 
-#define ANIM_WIDTH   64.f
-#define ANIM_HEIGHT  64.f
+#define ANIM_WIDTH   128.f
+#define ANIM_HEIGHT  128.f
 
 #define ANIM_FRAMES_IDLE 2
 #define ANIM_FRAMES_WALK 9
-#define ANIM_FRAMES_JUMP 5
+#define ANIM_FRAMES_JUMP 2
+#define ANIM_FRAMES_FALL 2
+#define ANIM_FRAMES_RUN  8
 
 #define ANIM_DELAY_IDLE 300
 #define ANIM_DELAY_WALK 100
-#define ANIM_DELAY_JUMPA 100
-#define ANIM_DELAY_JUMPB 300
-#define ANIM_DELAY_JUMP (ANIM_DELAY_JUMPA*2 + ANIM_DELAY_JUMPB*3)
+#define ANIM_DELAY_RUN  70
+#define ANIM_DELAY_JUMP 70
+#define ANIM_DELAY_FALL	100
 
+#define DURATION_JUMP 400
+#define DURATION_FALL 400
 
 enum AnimRow {
 	SPELLCAST = 0,
@@ -27,10 +31,10 @@ enum AnimRow {
 	CLIMB = 21,
 	IDLE = 22,
 	JUMP = 26,
-	SIT = 30,
+	FALL = 30,
 	EMOTE = 34,
-	RUN = 36,
-	WATERING = 40
+	RUN = 38,
+	WATERING = 42
 };
 
 
@@ -52,10 +56,11 @@ void Character::Update(Uint64 time)
 		case CHSTATE_IDLE:
 			if (ctrl.IsDirectionPressed())
 			{
-				newState = CHSTATE_WALKING;
-				speed = ctrl.IsLeftPressed() ? -.1f : .1f;
+				newState = CHSTATE_RUNNING;
+				speed = ctrl.IsLeftPressed() ? -.2f : .2f;
 			}
 			break;
+		case CHSTATE_RUNNING:
 		case CHSTATE_WALKING:
 			if (ctrl.IsJumpPressed())
 			{
@@ -67,13 +72,28 @@ void Character::Update(Uint64 time)
 			}
 			x += (int)(speed * (float)(time - updateTime));
 			break;
-		case CHSTATE_JUMPING:
-			if ((time - animStartTime) > ANIM_DELAY_JUMP)
+		case CHSTATE_JUMPING: {
+			if ((time - animStartTime) > DURATION_JUMP)
+			{
+				newState = CHSTATE_FALLING;
+			}
+			int delta = (int)(speed * (float)(time - updateTime));
+
+			x += delta;
+			y -= std::abs(delta);
+			break;
+		}
+		case CHSTATE_FALLING: {
+			if ((time - animStartTime) > DURATION_FALL)
 			{
 				newState = CHSTATE_IDLE;
 			}
-			x += (int)(speed * (int)(time - updateTime));
+			int delta = (int)(speed * (float)(time - updateTime));
+
+			x += delta;
+			y += std::abs(delta);
 			break;
+		}
 	}
 	if (state != newState)
 	{
@@ -98,15 +118,23 @@ void Character::Render(SDL_Renderer* renderer)
 	{
 	case CHSTATE_JUMPING: 
 		row   = AnimRow::JUMP;
-		frame = GetJumpFrame();
+		frame = GetAnimFrame(ANIM_DELAY_JUMP, ANIM_FRAMES_JUMP, false);
+		break;
+	case CHSTATE_FALLING:
+		row = AnimRow::FALL;
+		frame = GetAnimFrame(ANIM_DELAY_FALL, ANIM_FRAMES_FALL, false);
 		break;
 	case CHSTATE_WALKING:
-		row   = AnimRow::WALK;
-		frame = GetAnimFrame(ANIM_DELAY_WALK, ANIM_FRAMES_WALK);
+		row = AnimRow::WALK;
+		frame = GetAnimFrame(ANIM_DELAY_WALK, ANIM_FRAMES_WALK, true);
+		break;
+	case CHSTATE_RUNNING:
+		row   = AnimRow::RUN;
+		frame = GetAnimFrame(ANIM_DELAY_RUN, ANIM_FRAMES_RUN, true);
 		break;
 	default:
 		row   = AnimRow::IDLE;
-		frame = GetAnimFrame(ANIM_DELAY_IDLE, ANIM_FRAMES_IDLE);
+		frame = GetAnimFrame(ANIM_DELAY_IDLE, ANIM_FRAMES_IDLE, true);
 		break;
 	}
 	rcsAnim.x = ANIM_WIDTH  * frame;
@@ -115,17 +143,7 @@ void Character::Render(SDL_Renderer* renderer)
 	SDL_RenderTexture(renderer, anims, &rcsAnim, &rcdAnim);
 }
 
-int Character::GetJumpFrame() const
-{
-	int elapsed = (int)(updateTime - animStartTime);
-
-	if (elapsed < ANIM_DELAY_JUMPA * 2)
-	{
-		return elapsed / ANIM_DELAY_JUMPA;
-	}
-	if (elapsed >= ANIM_DELAY_JUMP)
-	{
-		return ANIM_FRAMES_JUMP - 1;
-	}
-	return 2 + (elapsed - ANIM_DELAY_JUMPA * 2) / ANIM_DELAY_JUMPB;
+int Character::GetAnimFrame(int delay, int frame_count, bool loop) const {
+	int frame = (int)(updateTime - animStartTime) / delay;
+	return loop ? frame % frame_count : std::min(frame, frame_count-1);
 }

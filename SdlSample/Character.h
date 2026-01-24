@@ -2,6 +2,7 @@
 #define _CHARACTER_H_
 
 #include <SDL3/SDL.h>
+#include <algorithm>
 
 #include "Controller.h"
 
@@ -24,11 +25,15 @@ public:
 	// Gets the current X position of the character.
     inline int GetX() const;
 
+    // Gets the current X position of the character.
+    inline int GetY() const;
+
 private:
     enum State {
         CHSTATE_IDLE,
         CHSTATE_WALKING,
         CHSTATE_JUMPING,
+		CHSTATE_FALLING,
         CHSTATE_RUNNING
     } state;
 
@@ -39,8 +44,7 @@ private:
         CHDIR_EAST
     } dir;
 
-	inline int GetAnimFrame(int delay, int frame_count) const { return ((int)(updateTime - animStartTime) / delay) % frame_count; }
-    int GetJumpFrame() const;
+    int GetAnimFrame(int delay, int frame_count, bool loop) const;
 
     int x, y;
     float speed;
@@ -51,6 +55,9 @@ private:
 
 int Character::GetX() const {
     return x;
+}
+int Character::GetY() const {
+    return y;
 }
 
 #endif // _CHARACTER_H_
