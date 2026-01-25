@@ -32,7 +32,8 @@ public:
 private:
     enum class State {
         FIRST,
-        IDLE_LEFT = FIRST, 
+        IDLE_LADDER = FIRST,
+        IDLE_LEFT,
         IDLE_RIGHT,
 		WALK_LEFT, 
         WALK_RIGHT,
@@ -42,6 +43,8 @@ private:
         JUMP_RIGHT,
         FALL_LEFT, 
         FALL_RIGHT,
+        CLIMB_UP,
+		CLIMB_DOWN,
 		// Add new states above this line
 		COUNT
     } state;
@@ -50,19 +53,19 @@ private:
 		IDLE2JUMP = (int)State::JUMP_LEFT - (int)State::IDLE_LEFT,
 		RUN2JUMP  = (int)State::JUMP_LEFT - (int)State::RUN_LEFT,
 		RUN2FALL  = (int)State::FALL_LEFT - (int)State::RUN_LEFT,
-        RUN2IDLE  = (int)State::IDLE_LEFT - (int)State::RUN_LEFT,
         JUMP2FALL = (int)State::FALL_LEFT - (int)State::JUMP_LEFT,
-        FALL2IDLE = (int)State::IDLE_LEFT - (int)State::FALL_LEFT,
 		FALL2RUN  = (int)State::RUN_LEFT  - (int)State::FALL_LEFT 
     };
 	
     inline State FindNewState(StateTransition transition) const {
         return (State)((int)state + (int)transition);
 	}
+    State FindIdleState() const;
 
-    const SDL_Point NORTH = {  0, -1 };
+	const SDL_Point HERE  = {  0,  0 };
+    const SDL_Point NORTH = {  0,  1 };
     const SDL_Point WEST  = { -1,  0 };
-    const SDL_Point SOUTH = {  0,  1 };
+    const SDL_Point SOUTH = {  0, -1 };
     const SDL_Point EAST  = {  1,  0 };
     const SDL_Point NORTHWEST = { -1,  1 };
     const SDL_Point NORTHEAST = {  1,  1 };
@@ -71,18 +74,19 @@ private:
 
     inline static float Align(float val)  { return (float)((int)val + 0.5f); }
     
-    inline Level::TileType GetNextTile(int dx, int dy = 0) const {
-        return level.GetTile(dx + (int)world.x, dy + (int)world.y);
+    inline bool IsTile(Level::TileType flags, int dx, int dy = 0) const {
+        return level.IsTile(dx + (int)world.x, dy + (int)world.y, flags);
     }
-    inline Level::TileType GetNextTile  (const SDL_Point& dir) const { return GetNextTile(dir.x, dir.y); }
-    inline Level::TileType GetBottomTile()                     const { return GetNextTile(0, -1);}
+    inline bool IsTile(const SDL_Point& dir, Level::TileType flags) const { return IsTile(flags, dir.x, dir.y); }
+    inline bool IsBottomTile(Level::TileType flags) const { return IsTile(SOUTH, flags); }
 
     SDL_FPoint UpdatePos(Uint64 time, const SDL_Point& dir, bool* xCenterPassed, bool* yCenterPassed) const;
     
-	State UpdateRun(Uint64 time, const SDL_Point& dir, bool keepRunning);
-    State UpdateJump(Uint64 time, const SDL_Point& dir);
-    State UpdateFall(Uint64 time, const SDL_Point& dir);
-    
+	State UpdateRun  (Uint64 time, const SDL_Point& dir, bool keepRunning);
+    State UpdateJump (Uint64 time, const SDL_Point& dir, bool grip);
+    State UpdateFall (Uint64 time, const SDL_Point& dir);
+    State UpdateClimb(Uint64 time, const SDL_Point& dir, const SDL_Point& nextLadder, bool keepClimbing);
+
 	bool colAligned, rowAligned;
     SDL_FPoint world;
     SDL_FPoint speed;

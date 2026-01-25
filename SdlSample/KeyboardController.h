@@ -11,6 +11,7 @@ public:
 	virtual bool IsLeftPressed () const override;
 	virtual bool IsRightPressed() const override;
 	virtual bool IsJumpPressed () const override;
+	virtual bool IsGoDownPressed() const override;
 };
 
 #endif // _KEYBOARDCONTROLLER_H_

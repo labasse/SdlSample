@@ -30,7 +30,7 @@ enum ImageIndices {
 	IMG_LEVEL    = 7
 };
 
-const float ParallaxCoefs[PARALLAX_LAYERS] = { 0.f, 0.f, 0.1f, 0.2f, 0.4f, 0.6f };
+const float ParallaxCoefs[PARALLAX_LAYERS] = { 0.f, 0.f, 0.15f, 0.25f, 0.4f, 0.6f };
 
 void ThrowSdl(bool is_ok);
 void ThrowSdl(void* ptr);

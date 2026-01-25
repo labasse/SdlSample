@@ -22,3 +22,8 @@ bool KeyboardController::IsJumpPressed() const
 {
 	return *(SDL_GetKeyboardState(nullptr) + SDL_SCANCODE_UP);
 }
+
+bool KeyboardController::IsGoDownPressed() const
+{
+	return *(SDL_GetKeyboardState(nullptr) + SDL_SCANCODE_DOWN);
+}

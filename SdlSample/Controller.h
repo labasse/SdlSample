@@ -25,6 +25,10 @@ public:
 	// @return true if the jump action is required; false otherwise.
 	virtual bool IsJumpPressed() const = 0;
 
+	// Gets whether the go down action is required by the player.
+	// @return true if the go down action is required; false otherwise.
+	virtual bool IsGoDownPressed() const = 0;
+
 	// Updates the controller state. This method can be overridden by derived classes.
 	// @param frame_start The SDL start time of the current frame in milliseconds.
 	// @remarks The base implementation does nothing.

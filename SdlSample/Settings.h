@@ -1,8 +1,8 @@
 #ifndef _SETTINGS_H_
 #define _SETTINGS_H_
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH	1400
+#define SCREEN_HEIGHT	1050
 
 #ifdef _DEBUG
 #include <cassert>

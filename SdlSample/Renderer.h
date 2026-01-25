@@ -18,9 +18,6 @@ public:
 	void RenderAlignedTileRect(float col, float row) const;
 	void RenderLayer(SDL_Texture* texture, float coef) const;
 
-	void GetVisibleTiles(int& firstCol, int& firstRow, int& lastCol, int& lastRow) const;
-	inline void GetVisibleTiles(SDL_Rect& rc) const { GetVisibleTiles(rc.x, rc.y, rc.w, rc.h); }
-
 private:
 	SDL_Renderer* back;
 	SDL_FRect view;
