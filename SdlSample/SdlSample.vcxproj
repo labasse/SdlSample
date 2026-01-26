@@ -150,6 +150,8 @@
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="KeyboardController.cpp" />
     <ClCompile Include="Level.cpp" />
+    <ClCompile Include="PlanarLevel.cpp" />
+    <ClCompile Include="RotativeLevel.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
@@ -159,6 +161,8 @@
     <ClInclude Include="Controller.h" />
     <ClInclude Include="KeyboardController.h" />
     <ClInclude Include="Level.h" />
+    <ClInclude Include="PlanarLevel.h" />
+    <ClInclude Include="RotativeLevel.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Settings.h" />

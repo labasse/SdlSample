@@ -6,7 +6,8 @@
 #include "ResourceManager.h"
 #include "KeyboardController.h"
 #include "Character.h"
-#include "Level.h"
+#include "PlanarLevel.h"
+#include "Renderer.h"
 
 #define FRAME_DURATION 16
 #define PARALLAX_LAYERS 6
@@ -55,7 +56,10 @@ int main(int argc, char *argv[])
 
         KeyboardController controller;
 		Renderer renderer(bck, SCREEN_WIDTH, SCREEN_HEIGHT, LEVEL_TILE_SIZE);
-        Level level(assets.GetTexture(IMG_LEVEL), Level::Test);
+        PlanarLevel level(assets.GetTexture(IMG_LEVEL));
+
+        level.Load(PlanarLevel::Level0);
+
         Character character(controller, assets.GetTexture(IMG_ANIMS), level);
 		
         for (auto frame_start = SDL_GetTicks(); Update(frame_start); frame_start = Throttle(frame_start, FRAME_DURATION))
@@ -67,7 +71,7 @@ int main(int argc, char *argv[])
 			{
                 for (auto i = 0; i < PARALLAX_LAYERS; ++i)
                 {
-                    renderer.RenderLayer(assets.GetTexture(i), ParallaxCoefs[i]);
+                    renderer.RenderParallaxLayer(assets.GetTexture(i), ParallaxCoefs[i]);
                 }
 			    level    .Render(renderer);
 			    character.Render(renderer);

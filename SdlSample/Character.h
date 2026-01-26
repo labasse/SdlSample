@@ -63,14 +63,14 @@ private:
     State FindIdleState() const;
 
 	const SDL_Point HERE  = {  0,  0 };
-    const SDL_Point NORTH = {  0,  1 };
+    const SDL_Point NORTH = {  0, -1 };
     const SDL_Point WEST  = { -1,  0 };
-    const SDL_Point SOUTH = {  0, -1 };
+    const SDL_Point SOUTH = {  0,  1 };
     const SDL_Point EAST  = {  1,  0 };
-    const SDL_Point NORTHWEST = { -1,  1 };
-    const SDL_Point NORTHEAST = {  1,  1 };
-    const SDL_Point SOUTHWEST = { -1, -1 };
-    const SDL_Point SOUTHEAST = {  1, -1 };
+    const SDL_Point NORTHWEST = { -1, -1 };
+    const SDL_Point NORTHEAST = {  1, -1 };
+    const SDL_Point SOUTHWEST = { -1,  1 };
+    const SDL_Point SOUTHEAST = {  1,  1 };
 
     inline static float Align(float val)  { return (float)((int)val + 0.5f); }
     

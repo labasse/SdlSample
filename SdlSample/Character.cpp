@@ -8,7 +8,7 @@
 #define ANIM_HEIGHT  128.f
 
 #define WORLD_OFFSETX 1.f
-#define WORLD_OFFSETY .62f
+#define WORLD_OFFSETY 1.38f
 
 #define TILE_CENTER .5f
 
@@ -245,18 +245,15 @@ Character::State Character::UpdateClimb(Uint64 time, const SDL_Point& dir, const
 void Character::Render(const Renderer &renderer)
 {
 	ASSERT(State::FIRST <= state && state < State::COUNT);
+	static const SDL_FPoint offset = { -WORLD_OFFSETX, -WORLD_OFFSETY };
 	const auto& anim = Anims[(int)state];
 	SDL_FRect rcsAnim = {
 		ANIM_WIDTH  * anim.GetFrame(updateTime - stateStartTime),
 		ANIM_HEIGHT * anim.row,
 		ANIM_WIDTH, ANIM_HEIGHT
 	};
-	renderer.Render(
-		anims, rcsAnim, 
-		GetWorldX() - WORLD_OFFSETX, 
-		GetWorldY() - WORLD_OFFSETY
-	);
+	renderer.RenderTile(anims, rcsAnim, GetWorldX(), GetWorldY(), &offset);
 #if DEBUG_CHARACTER_TILE
-	renderer.RenderAlignedTileRect(Align(world.x), Align(world.y));
+	renderer.RenderAlignedTileRect(world.x, world.y);
 #endif
 }
