@@ -5,6 +5,7 @@
 #include "Renderer.h"
 #include "TileSheet.h"
 #include "EmptyTile.h"
+#include "Parallax.h"
 
 #define LEVEL_TILE_SIZE		64
 #define LEVEL_TILE_COLUMNS	5
@@ -12,7 +13,7 @@
 class Level
 {
 public:
-	Level(SDL_Texture* tilesheet);
+	Level(SDL_Texture* tilesheet, const Parallax& parallax);
 	virtual ~Level();
 
 	void Load(const char *tiles[]);
@@ -38,8 +39,6 @@ public:
 	static const SDL_Point NORTHEAST;
 	static const SDL_Point SOUTHWEST;
 	static const SDL_Point SOUTHEAST;
-
-	inline static float Align(float val) { return (float)((int)val + 0.5f); }
 protected:
 	struct TileGenerator {
 		virtual Tile* NewTile() = 0;
@@ -49,11 +48,13 @@ protected:
 
 	inline TileSheet&		GetTileSheet()		 { return tilesheet; }
 	inline const TileSheet& GetTileSheet() const { return tilesheet; }
+	inline const Parallax&  GetParallax () const { return parallax; }
 private:
 	struct EmptyTileGen : public TileGenerator {
 		Tile* NewTile() override { return EmptyTile::GetInstance(); }
 	} emptyGen;
 	TileSheet tilesheet;
+	const Parallax &parallax;
 	std::vector<TileGenerator*> genByChar;
 	std::vector<std::vector<Tile*>> tiles;
 	size_t width;

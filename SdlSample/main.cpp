@@ -2,13 +2,14 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include "Settings.h"
-#include "ResourceManager.h"
-#include "KeyboardController.h"
 #include "Character.h"
+#include "KeyboardController.h"
+#include "Parallax.h"
 #include "PlanarLevel.h"
-#include "RotativeLevel.h"
 #include "Renderer.h"
+#include "RotativeLevel.h"
+#include "ResourceManager.h"
+#include "Settings.h"
 
 #define FRAME_DURATION 16
 #define PARALLAX_LAYERS 6
@@ -57,8 +58,10 @@ int main(int argc, char *argv[])
 
         KeyboardController controller;
 		Renderer renderer(bck, SCREEN_WIDTH, SCREEN_HEIGHT, LEVEL_TILE_SIZE);
-        RotativeLevel level(assets.GetTexture(IMG_LEVEL));
-
+        Parallax parallax(assets, IMG_PARALLAX, ParallaxCoefs, PARALLAX_LAYERS, NOREPEAT(1));
+        //PlanarLevel level(assets.GetTexture(IMG_LEVEL), parallax);
+        //level.Load(PlanarLevel::Level0);
+        RotativeLevel level(assets.GetTexture(IMG_LEVEL), parallax);
         level.Load(RotativeLevel::Level1);
 
         Character character(controller, assets.GetTexture(IMG_ANIMS), level);
@@ -70,10 +73,6 @@ int main(int argc, char *argv[])
 
 			renderer.BeginRender(character.GetWorldX(), character.GetWorldY());
 			{
-                for (auto i = 0; i < PARALLAX_LAYERS; ++i)
-                {
-                    renderer.RenderParallaxLayer(assets.GetTexture(i), ParallaxCoefs[i]);
-                }
 			    level    .Render(renderer);
 			    character.Render(renderer);
             }

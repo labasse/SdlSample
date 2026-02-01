@@ -10,7 +10,7 @@ class RotativeLevel : public Level
 public:
 	static const char *Level1[];
 
-	RotativeLevel(SDL_Texture* tilesheet);
+	RotativeLevel(SDL_Texture* tilesheet, const Parallax& parallax);
 	
 	void Render(const Renderer& renderer) const override;
 	void RenderPreview(const Renderer& renderer, const SDL_FPoint &Offset);

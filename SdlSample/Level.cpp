@@ -13,8 +13,9 @@ const SDL_Point Level::NORTHEAST = {  1, -1 };
 const SDL_Point Level::SOUTHWEST = { -1,  1 };
 const SDL_Point Level::SOUTHEAST = {  1,  1 };
 
-Level::Level(SDL_Texture* tilesheet) : 
+Level::Level(SDL_Texture* tilesheet, const Parallax& parallax) : 
 	tilesheet(tilesheet, LEVEL_TILE_SIZE, LEVEL_TILE_COLUMNS), 
+	parallax(parallax),
 	genByChar(0x7f, nullptr),
 	width(SIZE_MAX),
 	height(0),

@@ -61,8 +61,8 @@ Character::Character(const Controller& controller, SDL_Texture *anims, const Lev
 {
 	size_t startCol, startRow;
 	level.GetStart(startCol, startRow);
-	world.x = Level::Align((float)startCol);
-	world.y = Level::Align((float)startRow);
+	world.x = Renderer::Align(startCol);
+	world.y = Renderer::Align(startRow);
 }
 
 void Character::Update(Uint64 time)
@@ -152,23 +152,23 @@ Character::State Character::UpdateJump(Uint64 time, const SDL_Point& vec, bool g
 
 	if (yCenterPassed && IsTile(TILEFLAG_SOLID, 0, vec.y))
 	{
-		world.y = Level::Align(world.y);
+		world.y = Renderer::Align(world.y);
 		return FindNewState(StateTransition::JUMP2FALL);
 	}
 	else if (xCenterPassed && IsTile(Level::HERE, TILEFLAG_CLIMBABLE))
 	{
-		world.x = Level::Align(world.x);
+		world.x = Renderer::Align(world.x);
 		speed.x = 0.f;
 		return State::IDLE_LADDER;
 	}
 	else if (xCenterPassed && IsTile(TILEFLAG_SOLID, vec.x))
 	{
-		world.x = Level::Align(world.x);
+		world.x = Renderer::Align(world.x);
 		speed.x = 0;
 	}
 	else if (!speed.x && grip && !IsTile(TILEFLAG_SOLID, vec.x))
 	{
-		world.x = Level::Align(world.x);
+		world.x = Renderer::Align(world.x);
 		speed.x = JUMPING_SPEEDX_GRIP;
 	}
 	world = newPos;
@@ -196,11 +196,12 @@ Character::State Character::UpdateRun(Uint64 time, const SDL_Point& vec, bool ke
 		}
 		if(!keepRunning || IsTile(TILEFLAG_CANT_PASSTHRU, vec.x))
 		{ 
-			world.x = Level::Align(world.x);
+			world.x = Renderer::Align(world.x);
 			speed.x = 0.f;
 			return FindIdleState();
 		}
 	}
+	level.Normalize(newPos.x, newPos.y);
 	world = newPos;
 	return state;
 }
@@ -212,21 +213,22 @@ Character::State Character::UpdateFall(Uint64 time, const SDL_Point& vec)
 
 	if (yCenterPassed && IsBottomTile(TILEFLAG_CAN_PASSON))
 	{
-		world.y = Level::Align(world.y);
+		world.y = Renderer::Align(world.y);
 		speed.x = RUNNING_SPEED;
 		speed.y = 0.f;
 		if (xCenterPassed)
 		{
-			world.x = Level::Align(world.x);
+			world.x = Renderer::Align(world.x);
 			return FindIdleState();
 		}
 		else
 			return FindNewState(StateTransition::FALL2RUN);
 	}
+	level.Normalize(newPos.x, newPos.y);
 	world = newPos;
 	if (xCenterPassed && speed.x && IsTile(TILEFLAG_SOLID, vec.x))
 	{
-		world.x = Level::Align(world.x);
+		world.x = Renderer::Align(world.x);
 		speed.x = 0.f;
 	}
 	return state;
@@ -239,7 +241,7 @@ Character::State Character::UpdateClimb(Uint64 time, const SDL_Point& dir, const
 
 	if (yCenterPassed && (!IsTile(nextLadder, TILEFLAG_CLIMBABLE) || !keepClimbing))
 	{
-		world.y = Level::Align(world.y);
+		world.y = Renderer::Align(world.y);
 		return State::IDLE_LADDER;
 	}
 	world = newPos;

@@ -55,8 +55,8 @@ Tile* PlanarLevel::TileGen::NewTile()
 	return (freqAlt == 0 || (rand() % freqAlt)) ? &tileInstance : &tileInstanceAlt;
 }
 
-PlanarLevel::PlanarLevel(SDL_Texture* tilesheet) :
-	Level(tilesheet)
+PlanarLevel::PlanarLevel(SDL_Texture* tilesheet, const Parallax& parallax) :
+	Level(tilesheet, parallax)
 { 
 	RegisterEmptyTile(CHAR_EMPTY);
 	RegisterEmptyTile(CHAR_START);
@@ -72,7 +72,8 @@ void PlanarLevel::Render(const Renderer& renderer) const
 	SDL_Rect rcArea;
 
 	renderer.GetVisibleArea(rcArea);
-	
+	GetParallax().Render(renderer, renderer.GetLookAtWorld().x, .0f);
+
 	size_t lastcol = std::min(GetWidth (), (size_t)(rcArea.x + rcArea.w));
 	size_t lastrow = std::min(GetHeight(), (size_t)(rcArea.y + rcArea.h));
 

@@ -47,8 +47,8 @@ RotativeLevel::TileGen RotativeLevel::Predefined[] = {
 	{ CHAR_STONEWALL  , TILEINDEX_RELIEF_STONEWALL  , TILEFLAG_SOLID    }
 };
 
-RotativeLevel::RotativeLevel(SDL_Texture* tilesheet) : 
-	Level(tilesheet)
+RotativeLevel::RotativeLevel(SDL_Texture* tilesheet, const Parallax& parallax) : 
+	Level(tilesheet, parallax)
 {
 	RegisterEmptyTile(CHAR_EMPTY);
 	RegisterEmptyTile(CHAR_FINISH);
@@ -104,6 +104,8 @@ void RotativeLevel::Render(const Renderer& renderer) const
 	int col = (int)lookAtX + CIRCUMFERENCE_TILECOUNT;
 	int delta = CIRCUMFERENCE_TILECOUNT / 2;
 
+	GetParallax().Render(renderer, 0.f, lookAtX/static_cast<float>(GetWidth()));
+
 	DrawLevelColumn(renderer, col + delta);
 	while(--delta > 0)
 	{
@@ -116,8 +118,9 @@ void RotativeLevel::Render(const Renderer& renderer) const
 void RotativeLevel::Normalize(float& x, float& y) const
 {
 	std::ignore = y;
-	int ix = (int)x;
-	float dx = x - (float)ix;
+	x += CIRCUMFERENCE_TILECOUNT;
+	int ix = static_cast<int>(x);
+	float dx = x - static_cast<float>(ix);
 
 	ix = (ix + CIRCUMFERENCE_TILECOUNT) % CIRCUMFERENCE_TILECOUNT;
 	x = (float)ix + dx;

@@ -9,7 +9,7 @@ class PlanarLevel : public Level
 public:
 	static const char* Level0[];
 
-	PlanarLevel(SDL_Texture* tilesheet);
+	PlanarLevel(SDL_Texture* tilesheet, const Parallax& parallax);
 
 	void Render(const Renderer& renderer) const override;
 	void Normalize(float& x, float& y) const override;

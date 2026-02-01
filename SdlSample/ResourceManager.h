@@ -13,7 +13,7 @@ public:
 
 	bool LoadTextures(SDL_Renderer* renderer, const char *filenames[]);
 	
-	inline SDL_Texture* GetTexture(int index) const { return textures[index]; }
+	inline SDL_Texture* GetTexture(size_t index) const { return textures[index]; }
 private:
 	std::vector<SDL_Texture*> textures;
 };

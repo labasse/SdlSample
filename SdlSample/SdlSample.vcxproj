@@ -151,6 +151,7 @@
     <ClCompile Include="EmptyTile.cpp" />
     <ClCompile Include="KeyboardController.cpp" />
     <ClCompile Include="Level.cpp" />
+    <ClCompile Include="Parallax.cpp" />
     <ClCompile Include="PlanarLevel.cpp" />
     <ClCompile Include="RotativeLevel.cpp" />
     <ClCompile Include="main.cpp" />
@@ -168,6 +169,7 @@
     <ClInclude Include="EmptyTile.h" />
     <ClInclude Include="KeyboardController.h" />
     <ClInclude Include="Level.h" />
+    <ClInclude Include="Parallax.h" />
     <ClInclude Include="PlanarLevel.h" />
     <ClInclude Include="RotativeLevel.h" />
     <ClInclude Include="Renderer.h" />

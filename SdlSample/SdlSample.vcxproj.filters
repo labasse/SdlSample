@@ -26,6 +26,7 @@
     <ClCompile Include="RotativeReliefTile.cpp">
       <Filter>TileTypes</Filter>
     </ClCompile>
+    <ClCompile Include="Parallax.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h" />
@@ -53,6 +54,7 @@
     <ClInclude Include="RotativeReliefTile.h">
       <Filter>TileTypes</Filter>
     </ClInclude>
+    <ClInclude Include="Parallax.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="TileTypes">

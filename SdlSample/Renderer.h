@@ -23,9 +23,12 @@ public:
 	void RenderTileScaledX(SDL_Texture* texture, SDL_FRect src, float dxFromLookAt, float worldY, float widthX) const;
 
 	void RenderAlignedTileRect(float col, float row) const;
-	void RenderParallaxLayer(SDL_Texture* texture, float coef) const;
+	void RenderParallaxLayer(SDL_Texture* texture, float centerWorldX, float angleRatio, float layerCoef, float layerCirc, bool repeatable) const;
 	
 	inline const SDL_FPoint& GetLookAtWorld() const { return lookAtWorld; }
+
+	inline static float Align(size_t val) { return static_cast<float>(val) + 0.5f; }
+	inline static float Align(float  val) { return Align(static_cast<size_t>(val)); }
 private:
 	SDL_Renderer* back;
 	SDL_FPoint lookAtWorld;
