@@ -1,0 +1,47 @@
+#ifndef TILE_H
+#define TILE_H
+
+class Tile
+{
+public:
+	Tile(int flags);
+	virtual ~Tile() = default;
+
+	inline bool Is(int testFlags) const { return (flags&testFlags) != 0; }
+private:
+	int flags;
+};
+
+#define TILEFLAG_NONE			0
+#define TILEFLAG_ALLOCATED		(1<<1)
+#define TILEFLAG_SOLID			(1<<2)
+#define TILEFLAG_PLATFORM		(1<<3)
+#define TILEFLAG_CLIMBABLE		(1<<4)
+#define TILEFLAG_CAN_PASSON		(TILEFLAG_SOLID|TILEFLAG_PLATFORM|TILEFLAG_CLIMBABLE)
+#define TILEFLAG_CANT_PASSTHRU	(TILEFLAG_SOLID|TILEFLAG_PLATFORM)
+
+#define TILEINDEX_NONE		-1
+
+#define TILEINDEX_LADDER	0
+#define TILEINDEX_TILE_BCK	1
+#define TILEINDEX_BGSTONE	5
+#define TILEINDEX_PALE		6
+#define TILEINDEX_CRATE		20
+#define TILEINDEX_WND0		23
+#define TILEINDEX_WND1		24
+
+#define TILEINDEX_DOOR0		2
+#define TILEINDEX_DOOR1		3
+#define TILEINDEX_DOOR2		4
+#define TILEINDEX_DOOR3		7
+#define TILEINDEX_DOOR1_BCK	8
+#define TILEINDEX_DOOR4		9
+
+#define TILEINDEX_STONEWALL		10
+#define TILEINDEX_STONEFLOOR	15
+#define TILEINDEX_WOODENFLOOR	20
+
+#define TILEINDEX_RELIEF_STONEWALL	12
+#define TILEINDEX_RELIEF_STONEFLOOR	17
+
+#endif // TILE_H

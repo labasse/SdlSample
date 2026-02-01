@@ -7,6 +7,7 @@
 #include "KeyboardController.h"
 #include "Character.h"
 #include "PlanarLevel.h"
+#include "RotativeLevel.h"
 #include "Renderer.h"
 
 #define FRAME_DURATION 16
@@ -21,14 +22,14 @@ const char* ImageFiles[] = {
     "assets/bg5.png",
     "assets/anims.png",
 	"assets/level.png",
-	// Add new image files above this line
+    // Add new image files above this line
     nullptr
 };
 
 enum ImageIndices {
-	IMG_PARALLAX = 0,
-	IMG_ANIMS    = 6,
-	IMG_LEVEL    = 7
+	IMG_PARALLAX= 0,
+	IMG_ANIMS   = 6,
+	IMG_LEVEL   = 7
 };
 
 const float ParallaxCoefs[PARALLAX_LAYERS] = { 0.f, 0.f, 0.15f, 0.25f, 0.4f, 0.6f };
@@ -56,9 +57,9 @@ int main(int argc, char *argv[])
 
         KeyboardController controller;
 		Renderer renderer(bck, SCREEN_WIDTH, SCREEN_HEIGHT, LEVEL_TILE_SIZE);
-        PlanarLevel level(assets.GetTexture(IMG_LEVEL));
+        RotativeLevel level(assets.GetTexture(IMG_LEVEL));
 
-        level.Load(PlanarLevel::Level0);
+        level.Load(RotativeLevel::Level1);
 
         Character character(controller, assets.GetTexture(IMG_ANIMS), level);
 		

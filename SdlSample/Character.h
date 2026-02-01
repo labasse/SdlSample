@@ -6,6 +6,7 @@
 #include "Renderer.h"
 #include "Controller.h"
 #include "Level.h"
+#include "TileSheet.h"
 
 // The main character in the game.
 class Character {
@@ -35,8 +36,6 @@ private:
         IDLE_LADDER = FIRST,
         IDLE_LEFT,
         IDLE_RIGHT,
-		WALK_LEFT, 
-        WALK_RIGHT,
         RUN_LEFT, 
         RUN_RIGHT,
         JUMP_LEFT, 
@@ -61,24 +60,12 @@ private:
         return (State)((int)state + (int)transition);
 	}
     State FindIdleState() const;
-
-	const SDL_Point HERE  = {  0,  0 };
-    const SDL_Point NORTH = {  0, -1 };
-    const SDL_Point WEST  = { -1,  0 };
-    const SDL_Point SOUTH = {  0,  1 };
-    const SDL_Point EAST  = {  1,  0 };
-    const SDL_Point NORTHWEST = { -1, -1 };
-    const SDL_Point NORTHEAST = {  1, -1 };
-    const SDL_Point SOUTHWEST = { -1,  1 };
-    const SDL_Point SOUTHEAST = {  1,  1 };
-
-    inline static float Align(float val)  { return (float)((int)val + 0.5f); }
-    
-    inline bool IsTile(Level::TileType flags, int dx, int dy = 0) const {
-        return level.IsTile(dx + (int)world.x, dy + (int)world.y, flags);
+   
+    inline bool IsTile(int flags, int dx, int dy = 0) const {
+        return level.IsTileAround(world, dx, dy, flags);
     }
-    inline bool IsTile(const SDL_Point& dir, Level::TileType flags) const { return IsTile(flags, dir.x, dir.y); }
-    inline bool IsBottomTile(Level::TileType flags) const { return IsTile(SOUTH, flags); }
+    inline bool IsTile(const SDL_Point& dir, int flags) const { return IsTile(flags, dir.x, dir.y); }
+    inline bool IsBottomTile(int flags) const { return IsTile(Level::SOUTH, flags); }
 
     SDL_FPoint UpdatePos(Uint64 time, const SDL_Point& dir, bool* xCenterPassed, bool* yCenterPassed) const;
     
@@ -93,7 +80,7 @@ private:
     Uint64 stateStartTime, updateTime;
 	const Controller& ctrl;
 	const Level& level;
-	SDL_Texture* anims;
+	TileSheet anims;
 };
 
 #endif // _CHARACTER_H_

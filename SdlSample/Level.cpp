@@ -3,45 +3,41 @@
 #include "Level.h"
 #include "Settings.h"
 
-#define TILE_SOLID_COL 0
-#define TILE_SOLID_ROW 4
+const SDL_Point Level::HERE		 = {  0,  0 };
+const SDL_Point Level::NORTH	 = {  0, -1 };
+const SDL_Point Level::WEST		 = { -1,  0 };
+const SDL_Point Level::SOUTH	 = {  0,  1 };
+const SDL_Point Level::EAST		 = {  1,  0 };
+const SDL_Point Level::NORTHWEST = { -1, -1 };
+const SDL_Point Level::NORTHEAST = {  1, -1 };
+const SDL_Point Level::SOUTHWEST = { -1,  1 };
+const SDL_Point Level::SOUTHEAST = {  1,  1 };
 
 Level::Level(SDL_Texture* tilesheet) : 
-	tilesheet(tilesheet), 
-	types({ UNKNOWN }), 
-	tiles(nullptr), 
+	tilesheet(tilesheet, LEVEL_TILE_SIZE, LEVEL_TILE_COLUMNS), 
+	genByChar(0x7f, nullptr),
 	width(SIZE_MAX),
 	height(0),
 	startCol(0),
 	startRow(0)
+{ }
+
+Level::~Level()
 {
-	types[CHAR_EMPTY  ] = 
-	types[CHAR_START  ] =
-	types[CHAR_FINISH ] =
-	types[CHAR_DOOR0  ] =
-	types[CHAR_DOOR1  ] =
-	types[CHAR_DOOR2  ] =
-	types[CHAR_DOOR3  ] =
-	types[CHAR_PALE   ] =
-	types[CHAR_WINDOW0] =
-	types[CHAR_WINDOW1] =
-	types[CHAR_BGSTONE] = EMPTY;
-
-	types[CHAR_LADDER] = LADDER;
-
-	types[CHAR_WOODENFLOOR] =
-	types[CHAR_STONEFLOOR ] = PLATFORM;
-
-	types[CHAR_CRATE    ] =
-	types[CHAR_STONEWALL] = SOLID;
+	for (auto& line : tiles) {
+		for (auto tile : line) {
+			if (tile->Is(TILEFLAG_ALLOCATED)) {
+				delete tile;
+			}
+		}
+	}
 }
 
-void Level::Load(const char* tiles[])
+void Level::Load(const char* map[])
 {
-	this->tiles = tiles;
-	width = strlen(tiles[0]);
-	for (auto row = tiles; *row != nullptr; ++row, ++height) {
-		auto& line = tileSprites.emplace_back();
+	width = strlen(map[0]);
+	for (auto row = map; *row != nullptr; ++row, ++height) {
+		auto& line = tiles.emplace_back();
 
 		line.reserve(width);
 		ASSERT(width == strlen(*row));
@@ -51,7 +47,15 @@ void Level::Load(const char* tiles[])
 				startCol = (size_t)(p - *row);
 				startRow = height;
 			}
-			line.push_back(GetSpriteIndexFromChar(*p));
+			ASSERT(genByChar[*p]);
+			line.push_back(genByChar[*p]->NewTile());
 		}
 	}
+}
+
+void Level::RegisterTileType(const char symbol, TileGenerator* gen)
+{
+	ASSERT(symbol >= 0 && symbol < 0x7f);
+	ASSERT(gen && genByChar[symbol] == nullptr);
+	genByChar[(size_t)symbol] = gen;
 }

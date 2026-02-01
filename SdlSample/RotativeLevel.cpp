@@ -1,88 +1,124 @@
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <algorithm>
+
 #include "Settings.h"
 
 #include "RotativeLevel.h"
 
-#define PLATFORM_WIDTH 72
-#define WALL_WIDTH     LEVEL_TILE_SIZE
+#define CIRCUMFERENCE_TILECOUNT 36
+#define RADIUS0	367.f
+#define RADIUS1 415.f
+
+#define PLATFORM_FACE_WIDTH 72.f
+#define PLATFORM_SIDE_WIDTH 48.f
 
 const char *RotativeLevel::Level1[] = {
-	"| | | | | | | | | | | | | | | | | | ",
-	"O|O|O|O|O|O|O|O|O|O|O|O|O|O|O|O|O|O|",
-	"OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
-	"OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
-	"xOOO------OOOOOOOOOOOOOOOOO------OOO",
-	"H---OOOOOO-----------------OOOOOO---",
-	"HOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+	"                                    ",
+	"           |===|                    ",
+	"         |==/~\\===|                 ",
+	"         |OO[ ]OOO======|           ",
+	"         |=====HOOOO()OO|     ||||||",
+	"|        |OOOOOHOO========|   |OOOO=",
+	"|||   |||=OO|||HOOOOOOOO|||   |||OOO",
+	"=O=====O=====O===H=O=====O==H==O====",
+	"OOOOOO()OOOOOOOOOHOOOOOOOOOOHOOOOOOO",
+	"OOOOOOOOOOOOO/~\\OHOO====OOOOHOO/~\\OO",
+	"xOOO|====|OOO[ ]OHOOOOOOOOO|==|[ ]OO",
+	"=====OOOO===================OO======",
+	"HOOOOOOOOOOOOOOO()OOOOOOOOOOOOOOOOOO",
 	"HOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
 	"HOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
 	nullptr
 };
 
-struct {
-	int widthWall;
-	int widthPlatform;
-	int depthPlatform;
-} rotatedColumns[] = {
-	{  0,  0, 48 },
-	{ 11, 13, 46 },
-	{ 21, 25, 44 },
-	{ 31, 36, 39 },
-	{ 39, 46, 34 },
-	{ 47, 55, 28 },
-	{ 53, 63, 20 },
-	{ 58, 68, 12 },
-	{ 60, 71,  4 }
+RotativeLevel::TileGen RotativeLevel::Predefined[] = {
+	{ CHAR_LADDER     , TILEINDEX_LADDER     , TILEFLAG_CLIMBABLE },
+	{ CHAR_START	  , TILEINDEX_BGSTONE	 },
+	{ CHAR_BGSTONE    , TILEINDEX_BGSTONE	 },
+	{ CHAR_WINDOW0    , TILEINDEX_WND0		 , TILEFLAG_SPECIALBCK},
+	{ CHAR_WINDOW1    , TILEINDEX_WND1		 , TILEFLAG_SPECIALBCK},
+	{ CHAR_DOOR0      , TILEINDEX_DOOR0		 },
+	{ CHAR_DOOR1      , TILEINDEX_DOOR1		 , TILEFLAG_SPECIALBCK},
+	{ CHAR_DOOR2      , TILEINDEX_DOOR2		 },
+	{ CHAR_DOOR3      , TILEINDEX_DOOR3		 },
+	{ CHAR_DOOR4      , TILEINDEX_DOOR4		 },
+	{ CHAR_STONEFLOOR , TILEINDEX_RELIEF_STONEFLOOR , TILEFLAG_PLATFORM },
+	{ CHAR_STONEWALL  , TILEINDEX_RELIEF_STONEWALL  , TILEFLAG_SOLID    }
 };
 
-RotativeLevel::RotativeLevel(SDL_Texture* tilesheet, const SDL_FPoint &worldLevelOffset) : 
-	Level(tilesheet),
-	worldLevelOffset(worldLevelOffset)
+RotativeLevel::RotativeLevel(SDL_Texture* tilesheet) : 
+	Level(tilesheet)
 {
-
-}
-
-int RotativeLevel::GetSpriteIndexFromChar(char c) const
-{
-	switch (c)
+	RegisterEmptyTile(CHAR_EMPTY);
+	RegisterEmptyTile(CHAR_FINISH);
+	for (auto& gen : Predefined)
 	{
-	case CHAR_START      :
-	case CHAR_FINISH     :
-	case CHAR_EMPTY      : return -1;
-	case CHAR_BGSTONE    : return  6;
-	case CHAR_STONEFLOOR : return rand() % FREQ_WEB ? 11 : 23;
-	case CHAR_STONEWALL  : return 10;
-	case CHAR_LADDER     : return 21;
-	default:
-		ASSERT(false);
-		return -1;
+		RegisterTileType(gen.GetSymbol(), &gen);
 	}
 }
 
-void RotativeLevel::Render(const Renderer& renderer)
+RotativeLevel::TileGen::TileGen(char symbol, int tileIndex, int flags) :
+	symbol(symbol),
+	tileInstance(tileIndex, flags),
+	tileRelief(tileIndex, flags)
 {
-	/* for (int row = 0; row < (int)GetHeight(); ++row) {
-		for(int col = 0; col < (int)GetWidth(); ++col) {
-			auto tileIndex = GetTileSpriteIndex(col, row);
-			if (tileIndex >= 0) {
-				SDL_FRect rcs = { 
-					(float)(tileIndex % 8) * LEVEL_TILE_SIZE, 
-					(float)(tileIndex / 8) * LEVEL_TILE_SIZE, 
-					(float)LEVEL_TILE_SIZE, 
-					(float)LEVEL_TILE_SIZE 
-				};
-				float worldX = worldLevelOffset.x + col * PLATFORM_WIDTH;
-				float worldY = worldLevelOffset.y + row * LEVEL_TILE_SIZE;
-				int absCol = (int)col;
-				if (absCol < GetWidth() / 2)
-					worldX += rotatedColumns[absCol].depthPlatform;
-				else
-					worldX += rotatedColumns[(int)GetWidth() - absCol - 1].depthPlatform;
-				renderer.RenderRotativeTile(
-					GetTileSheet(), rcs,
-					worldX,
-					worldY
-				);
-			}
+}
+
+Tile* RotativeLevel::TileGen::NewTile()
+{
+	return tileInstance.Is(TILEFLAG_ROTATIVE_RELIEF) ? &tileRelief : &tileInstance;
+}
+
+void RotativeLevel::DrawLevelColumn(const Renderer& renderer, size_t col) const
+{
+	col %= CIRCUMFERENCE_TILECOUNT;
+	float lookAtX = renderer.GetLookAtWorld().x;
+	float angle = (float)(2. * M_PI / (double)CIRCUMFERENCE_TILECOUNT);
+	float s0 = sinf((col - lookAtX) * angle);
+	float s1 = sinf((col + 1.f - lookAtX) * angle);
+	float offsets[4] = {
+		s0* RADIUS0,
+		s1* RADIUS0,
+		s1* RADIUS1,
+		s0* RADIUS1
+	};
+
+	for (size_t row = 0; row < (int)GetHeight(); ++row)
+	{
+		auto tile = GetTile(col, row);
+
+		if (tile->Is(TILEFLAG_ROTATIVE))
+		{
+			static_cast<const RotativeTile*>(tile)->Render(
+				renderer, GetTileSheet(), 
+				(float)row, offsets
+			);
 		}
-	}*/
+	}
+}
+
+void RotativeLevel::Render(const Renderer& renderer) const
+{
+	float lookAtX = renderer.GetLookAtWorld().x;
+	int col = (int)lookAtX + CIRCUMFERENCE_TILECOUNT;
+	int delta = CIRCUMFERENCE_TILECOUNT / 2;
+
+	DrawLevelColumn(renderer, col + delta);
+	while(--delta > 0)
+	{
+		DrawLevelColumn(renderer, col - delta);
+		DrawLevelColumn(renderer, col + delta);
+	}
+	DrawLevelColumn(renderer, col);
+}
+
+void RotativeLevel::Normalize(float& x, float& y) const
+{
+	std::ignore = y;
+	int ix = (int)x;
+	float dx = x - (float)ix;
+
+	ix = (ix + CIRCUMFERENCE_TILECOUNT) % CIRCUMFERENCE_TILECOUNT;
+	x = (float)ix + dx;
 }

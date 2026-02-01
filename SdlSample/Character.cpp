@@ -4,8 +4,8 @@
 
 #include "Character.h"
 
-#define ANIM_WIDTH   128.f
-#define ANIM_HEIGHT  128.f
+#define ANIM_SIZE	128
+#define ANIM_COLUMNS 13
 
 #define WORLD_OFFSETX 1.f
 #define WORLD_OFFSETY 1.38f
@@ -17,31 +17,35 @@
 #define JUMPING_SPEEDY		0.009f
 #define JUMPING_SPEEDX_GRIP 0.004f
 
+#define UP     0
+#define LEFT   1
+#define RIGHT  3
+
+#define ROW_WALK	8
+#define ROW_CLIMB	21
+#define ROW_IDLE	22
+#define ROW_JUMP	26
+#define ROW_FALL	30
+#define ROW_RUN		38
+
+#define DELAY_IDLE		300
+#define DELAY_RUNJUMP    70
+#define DELAY_FALLCLIMB 100
+
 #define JUMP_DURATION 250
 
-const struct 
-{
-	int GetFrame(Uint64 deltaTime) const 
-	{
-		int frame = (int)deltaTime / frameDelay;
-		return loop ? frame % frameCount : std::min(frame, frameCount - 1);
-	}
-
-	int row, frameDelay, frameCount	; bool loop;
-} Anims[] = {
-	{	22	, 300		, 2			, true	},	// IDLE_LADDER
-	{	23	, 300		, 2			, true	},	// IDLE_LEFT
-	{	25	, 300		, 2			, true	},	// IDLE_RIGHT
-	{	 9	, 100		, 9			, true	},	// WALK_LEFT
-	{	11	, 100		, 9			, true	},	// WALK_RIGHT
-	{	39	, 70		, 8			, true	},	// RUN_LEFT
-	{	41	, 70		, 8			, true	},	// RUN_RIGHT
-	{	27	, 70		, 2			, false	},	// JUMP_LEFT
-	{	29	, 70		, 2			, false	},	// JUMP_RIGHT
-	{	31	, 100		, 2			, false	},	// FALL_LEFT
-	{	33	, 100		, 2			, false },	// FALL_RIGHT
-	{ 	21	, 100		, 6			, true	},	// CLIMB_UP
-	{   21	, 100		, 6			, true  }	// CLIMB_DOWN
+TileSheet::Anim Anims[] = {				// frameCount
+	{	ROW_IDLE + UP	, DELAY_IDLE		, 2	},			// IDLE_LADDER
+	{	ROW_IDLE + LEFT	, DELAY_IDLE		, 2	},			// IDLE_LEFT
+	{	ROW_IDLE + RIGHT, DELAY_IDLE		, 2	},			// IDLE_RIGHT
+	{	ROW_RUN  + LEFT	, DELAY_RUNJUMP		, 8	},			// RUN_LEFT
+	{	ROW_RUN  + RIGHT, DELAY_RUNJUMP		, 8	},			// RUN_RIGHT
+	{	ROW_JUMP + LEFT	, DELAY_RUNJUMP		, 2	, false	},	// JUMP_LEFT
+	{	ROW_JUMP + RIGHT, DELAY_RUNJUMP		, 2	, false	},	// JUMP_RIGHT
+	{	ROW_FALL + LEFT	, DELAY_FALLCLIMB	, 2	, false	},	// FALL_LEFT
+	{	ROW_FALL + RIGHT, DELAY_FALLCLIMB	, 2	, false },	// FALL_RIGHT
+	{ 	ROW_CLIMB		, DELAY_FALLCLIMB	, 6	},			// CLIMB_UP
+	{   ROW_CLIMB		, DELAY_FALLCLIMB	, 6	}			// CLIMB_DOWN
 };
 
 Character::Character(const Controller& controller, SDL_Texture *anims, const Level& level) : 
@@ -52,13 +56,13 @@ Character::Character(const Controller& controller, SDL_Texture *anims, const Lev
 	stateStartTime(0),
 	ctrl(controller), 
 	level(level),
-	anims(anims),
+	anims(anims, ANIM_SIZE, ANIM_COLUMNS),
 	updateTime(SDL_GetTicks())
 {
 	size_t startCol, startRow;
 	level.GetStart(startCol, startRow);
-	world.x = Align((float)startCol);
-	world.y = Align((float)startRow);
+	world.x = Level::Align((float)startCol);
+	world.y = Level::Align((float)startRow);
 }
 
 void Character::Update(Uint64 time)
@@ -78,12 +82,12 @@ void Character::Update(Uint64 time)
 			newState = State::RUN_RIGHT;
 			speed.x = RUNNING_SPEED;
 		}
-		else if (IsTile(HERE, Level::LADDER) && ctrl.IsJumpPressed())
+		else if (IsTile(Level::HERE, TILEFLAG_CLIMBABLE) && ctrl.IsJumpPressed())
 		{
 			speed.y = CLIMBING_SPEED;
 			newState = State::CLIMB_UP;
 		}
-		else if (IsBottomTile(Level::LADDER) && ctrl.IsGoDownPressed()) {
+		else if (IsBottomTile(TILEFLAG_CLIMBABLE) && ctrl.IsGoDownPressed()) {
 			speed.y = CLIMBING_SPEED;
 			newState = State::CLIMB_DOWN;
 		}
@@ -92,14 +96,14 @@ void Character::Update(Uint64 time)
 			newState = FindNewState(StateTransition::IDLE2JUMP);
 		}
 		break;
-	case State::RUN_LEFT  : newState = UpdateRun(time, WEST, ctrl.IsLeftPressed ()); break;
-	case State::RUN_RIGHT : newState = UpdateRun(time, EAST, ctrl.IsRightPressed()); break;
-	case State::JUMP_LEFT : newState = UpdateJump(time, NORTHWEST, ctrl.IsLeftPressed ()); break;
-	case State::JUMP_RIGHT: newState = UpdateJump(time, NORTHEAST, ctrl.IsRightPressed()); break;
-	case State::FALL_LEFT : newState = UpdateFall(time, SOUTHWEST); break;
-	case State::FALL_RIGHT: newState = UpdateFall(time, SOUTHEAST); break;
-	case State::CLIMB_UP  : newState = UpdateClimb(time, NORTH, HERE , ctrl.IsJumpPressed  ()); break;
-	case State::CLIMB_DOWN: newState = UpdateClimb(time, SOUTH, SOUTH, ctrl.IsGoDownPressed()); break;
+	case State::RUN_LEFT  : newState = UpdateRun(time, Level::WEST, ctrl.IsLeftPressed ()); break;
+	case State::RUN_RIGHT : newState = UpdateRun(time, Level::EAST, ctrl.IsRightPressed()); break;
+	case State::JUMP_LEFT : newState = UpdateJump(time, Level::NORTHWEST, ctrl.IsLeftPressed ()); break;
+	case State::JUMP_RIGHT: newState = UpdateJump(time, Level::NORTHEAST, ctrl.IsRightPressed()); break;
+	case State::FALL_LEFT : newState = UpdateFall(time, Level::SOUTHWEST); break;
+	case State::FALL_RIGHT: newState = UpdateFall(time, Level::SOUTHEAST); break;
+	case State::CLIMB_UP  : newState = UpdateClimb(time, Level::NORTH, Level::HERE, ctrl.IsJumpPressed()); break;
+	case State::CLIMB_DOWN: newState = UpdateClimb(time, Level::SOUTH, Level::SOUTH, ctrl.IsGoDownPressed()); break;
 	}
 	if (state != newState)
 	{
@@ -122,8 +126,7 @@ inline static void FillCenterPassed(bool* centerPassed, float worldPos, float ne
 
 Character::State Character::FindIdleState() const
 {
-	if (IsBottomTile(Level::LADDER) || IsTile(HERE, Level::LADDER))
-	{
+	if (IsBottomTile(TILEFLAG_CLIMBABLE) || IsTile(Level::HERE, TILEFLAG_CLIMBABLE)) {
 		return State::IDLE_LADDER;
 	}
 	return ((int)state)%2 == 1 ? State::IDLE_LEFT : State::IDLE_RIGHT;
@@ -138,6 +141,7 @@ SDL_FPoint Character::UpdatePos(Uint64 time, const SDL_Point& dir, bool* xCenter
 	};
 	FillCenterPassed(xCenterPassed, world.x, newPos.x);
 	FillCenterPassed(yCenterPassed, world.y, newPos.y);
+	level.Normalize(newPos.x, newPos.y);
 	return newPos;
 }
 
@@ -146,25 +150,25 @@ Character::State Character::UpdateJump(Uint64 time, const SDL_Point& vec, bool g
 	bool xCenterPassed, yCenterPassed;
 	auto newPos = UpdatePos(time, vec, &xCenterPassed, &yCenterPassed);
 
-	if (yCenterPassed && IsTile(Level::SOLID, 0, vec.y))
+	if (yCenterPassed && IsTile(TILEFLAG_SOLID, 0, vec.y))
 	{
-		world.y = Align(world.y);
+		world.y = Level::Align(world.y);
 		return FindNewState(StateTransition::JUMP2FALL);
 	}
-	else if (xCenterPassed && IsTile(HERE, Level::LADDER))
+	else if (xCenterPassed && IsTile(Level::HERE, TILEFLAG_CLIMBABLE))
 	{
-		world.x = Align(world.x);
+		world.x = Level::Align(world.x);
 		speed.x = 0.f;
 		return State::IDLE_LADDER;
 	}
-	else if (xCenterPassed && IsTile(Level::SOLID, vec.x))
+	else if (xCenterPassed && IsTile(TILEFLAG_SOLID, vec.x))
 	{
-		world.x = Align(world.x);
+		world.x = Level::Align(world.x);
 		speed.x = 0;
 	}
-	else if (!speed.x && grip && !IsTile(Level::SOLID, vec.x))
+	else if (!speed.x && grip && !IsTile(TILEFLAG_SOLID, vec.x))
 	{
-		world.x = Align(world.x);
+		world.x = Level::Align(world.x);
 		speed.x = JUMPING_SPEEDX_GRIP;
 	}
 	world = newPos;
@@ -185,14 +189,14 @@ Character::State Character::UpdateRun(Uint64 time, const SDL_Point& vec, bool ke
 	}
 	if( xCenterPassed )
 	{ 
-		if (IsBottomTile(Level::TileType::EMPTY))
+		if (!IsBottomTile(TILEFLAG_CAN_PASSON))
 		{
 			speed.y = JUMPING_SPEEDY;
 			return FindNewState(StateTransition::RUN2FALL);
 		}
-		if(!keepRunning || !IsTile(Level::EMPTY|Level::LADDER, vec.x))
+		if(!keepRunning || IsTile(TILEFLAG_CANT_PASSTHRU, vec.x))
 		{ 
-			world.x = Align(world.x);
+			world.x = Level::Align(world.x);
 			speed.x = 0.f;
 			return FindIdleState();
 		}
@@ -206,23 +210,23 @@ Character::State Character::UpdateFall(Uint64 time, const SDL_Point& vec)
 	bool xCenterPassed, yCenterPassed;
 	auto newPos = UpdatePos(time, vec, &xCenterPassed, &yCenterPassed);
 
-	if (yCenterPassed && !IsBottomTile(Level::EMPTY))
+	if (yCenterPassed && IsBottomTile(TILEFLAG_CAN_PASSON))
 	{
-		world.y = Align(world.y);
+		world.y = Level::Align(world.y);
 		speed.x = RUNNING_SPEED;
 		speed.y = 0.f;
 		if (xCenterPassed)
 		{
-			world.x = Align(world.x);
+			world.x = Level::Align(world.x);
 			return FindIdleState();
 		}
 		else
 			return FindNewState(StateTransition::FALL2RUN);
 	}
 	world = newPos;
-	if (xCenterPassed && speed.x && IsTile(Level::SOLID, vec.x))
+	if (xCenterPassed && speed.x && IsTile(TILEFLAG_SOLID, vec.x))
 	{
-		world.x = Align(world.x);
+		world.x = Level::Align(world.x);
 		speed.x = 0.f;
 	}
 	return state;
@@ -233,9 +237,9 @@ Character::State Character::UpdateClimb(Uint64 time, const SDL_Point& dir, const
 	bool yCenterPassed;
 	auto newPos = UpdatePos(time, dir, nullptr, &yCenterPassed);
 
-	if (yCenterPassed && (!IsTile(nextLadder, Level::LADDER) || !keepClimbing))
+	if (yCenterPassed && (!IsTile(nextLadder, TILEFLAG_CLIMBABLE) || !keepClimbing))
 	{
-		world.y = Align(world.y);
+		world.y = Level::Align(world.y);
 		return State::IDLE_LADDER;
 	}
 	world = newPos;
@@ -245,14 +249,12 @@ Character::State Character::UpdateClimb(Uint64 time, const SDL_Point& dir, const
 void Character::Render(const Renderer &renderer)
 {
 	ASSERT(State::FIRST <= state && state < State::COUNT);
-	static const SDL_FPoint offset = { -WORLD_OFFSETX, -WORLD_OFFSETY };
-	const auto& anim = Anims[(int)state];
-	SDL_FRect rcsAnim = {
-		ANIM_WIDTH  * anim.GetFrame(updateTime - stateStartTime),
-		ANIM_HEIGHT * anim.row,
-		ANIM_WIDTH, ANIM_HEIGHT
-	};
-	renderer.RenderTile(anims, rcsAnim, GetWorldX(), GetWorldY(), &offset);
+	renderer.RenderTile(
+		anims.GetTexture(), 
+		anims.FromAnim(Anims[(int)state], updateTime - stateStartTime), 
+		GetWorldX() - WORLD_OFFSETX, 
+		GetWorldY() - WORLD_OFFSETY
+	);
 #if DEBUG_CHARACTER_TILE
 	renderer.RenderAlignedTileRect(world.x, world.y);
 #endif

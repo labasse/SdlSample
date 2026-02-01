@@ -19,33 +19,18 @@ public:
 
 	void GetVisibleArea(SDL_Rect& worldRect) const;
 
-	void RenderTile(SDL_Texture* texture, const SDL_FRect& srcRect, float worldX, float worldY, const SDL_FPoint* offset = nullptr) const;
+	void RenderTile		  (SDL_Texture* texture, SDL_FRect src, float worldX, float worldY) const;
+	void RenderTileScaledX(SDL_Texture* texture, SDL_FRect src, float dxFromLookAt, float worldY, float widthX) const;
+
 	void RenderAlignedTileRect(float col, float row) const;
 	void RenderParallaxLayer(SDL_Texture* texture, float coef) const;
-	void RenderRotativePlatform(SDL_Texture* texture,
-		const SDL_FRect& srcFace, 
-		const SDL_FRect& srcSide, 
-		const SDL_FRect& srcBack, 
-		float worldX, float worldY
-	) const;
 	
-protected:
-	SDL_FRect GetTileRect(float worldX, float worldY, float pixelWidth, float pixelHeight, const SDL_FPoint* offset) const;
-	
-	inline SDL_Renderer* GetRenderer() const { return back; }
-	
-	inline const SDL_FRect&  GetView		() const { return view; }
-	inline const SDL_FPoint& GetLookAtWorld	() const { return lookAtWorld; }
-	
-	inline float GetPixelsPerWorldUnit() const { return pixelsPerWorldUnit; }
+	inline const SDL_FPoint& GetLookAtWorld() const { return lookAtWorld; }
 private:
 	SDL_Renderer* back;
 	SDL_FPoint lookAtWorld;
 	SDL_FRect view;
 	float pixelsPerWorldUnit;
-	int circumference;
-	float tileAngle;
-	float radius;
 };
 
 #endif // _CAMERA_H_

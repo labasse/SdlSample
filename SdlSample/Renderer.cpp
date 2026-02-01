@@ -7,16 +7,14 @@ Renderer::Renderer(SDL_Renderer* back, int viewWidth, int viewHeight, int pixels
 	lookAtWorld({ 0.f, 0.f }),
 	view({ 0.0f, 0.0f, (float)viewWidth, (float)viewHeight }),
 	pixelsPerWorldUnit((float)pixelsPerWorldUnit)
-{
-    
-}
+{ }
 
 void Renderer::BeginRender(float lookAtWorldX, float lookAtWorldY)
 {
 	lookAtWorld.x = lookAtWorldX;
 	lookAtWorld.y = lookAtWorldY;
-	view.x = lookAtWorldX * GetPixelsPerWorldUnit() - view.w * LOOKAT_SCREEN_X;
-	view.y = lookAtWorldY * GetPixelsPerWorldUnit() - view.h * LOOKAT_SCREEN_Y;
+	view.x = lookAtWorldX * pixelsPerWorldUnit - view.w * LOOKAT_SCREEN_X;
+	view.y = lookAtWorldY * pixelsPerWorldUnit - view.h * LOOKAT_SCREEN_Y;
 }
 
 void Renderer::EndRender()
@@ -26,55 +24,53 @@ void Renderer::EndRender()
 
 void Renderer::GetVisibleArea(SDL_Rect& worldRect) const
 {
-	worldRect.x = (int)(view.x / GetPixelsPerWorldUnit());
-	worldRect.y = (int)(view.y / GetPixelsPerWorldUnit());
-	worldRect.w = (int)(view.w / GetPixelsPerWorldUnit() + VISIBLE_AREA_COMPLETION);
-	worldRect.h = (int)(view.h / GetPixelsPerWorldUnit() + VISIBLE_AREA_COMPLETION);
+	worldRect.x = (int)(view.x / pixelsPerWorldUnit);
+	worldRect.y = (int)(view.y / pixelsPerWorldUnit);
+	worldRect.w = (int)(view.w / pixelsPerWorldUnit + VISIBLE_AREA_COMPLETION);
+	worldRect.h = (int)(view.h / pixelsPerWorldUnit + VISIBLE_AREA_COMPLETION);
 }
 
 void Renderer::RenderAlignedTileRect(float col, float row) const
 {
-	SDL_FRect dstRect = GetTileRect(
+	SDL_FRect dstRect {	
 		(float)(int)col, (float)(int)row, 
-		pixelsPerWorldUnit, pixelsPerWorldUnit,
-		nullptr
-	);
+		pixelsPerWorldUnit, pixelsPerWorldUnit
+	};
 	SDL_SetRenderDrawColor(back, 0, 255, 0, 255);
 	SDL_RenderRect(back, &dstRect);
 }
 
-void Renderer::RenderTile(SDL_Texture* texture, const SDL_FRect& srcRect, float worldX, float worldY, const SDL_FPoint* offset) const
+void Renderer::RenderTile(SDL_Texture* texture, SDL_FRect src, float worldX, float worldY) const
 {
-	SDL_FRect dstRect = GetTileRect(worldX, worldY, srcRect.w, srcRect.h, offset);
-
-	SDL_RenderTexture(back, texture, &srcRect, &dstRect);
+	SDL_FRect dst{
+		worldX * pixelsPerWorldUnit - view.x,
+		worldY * pixelsPerWorldUnit - view.y,
+		src.w, src.h
+	};
+	SDL_RenderTexture(back, texture, &src, &dst);
 }
 
-SDL_FRect Renderer::GetTileRect(float worldX, float worldY, float pixelWidth, float pixelHeight, const SDL_FPoint* offset) const
+void Renderer::RenderTileScaledX(SDL_Texture* texture, SDL_FRect src, float dxFromLookAt, float worldY, float widthX) const
 {
-	if (offset != nullptr)
-	{
-		worldX += offset->x;
-		worldY += offset->y;
-	}
-	return SDL_FRect{
-		worldX * GetPixelsPerWorldUnit() - GetView().x,
-		worldY * GetPixelsPerWorldUnit() - GetView().y,
-		pixelWidth, pixelHeight
+	SDL_FRect dst = {
+		lookAtWorld.x * pixelsPerWorldUnit - view.x + dxFromLookAt,
+		worldY * pixelsPerWorldUnit - view.y,
+		widthX, src.h
 	};
+	SDL_RenderTexture(back, texture, &src, &dst);
 }
 
 void Renderer::RenderParallaxLayer(SDL_Texture* texture, float coef) const
 {
 	SDL_FRect rcd;
 
-	rcd.w = GetView().w;
-	rcd.h = GetView().h;
-	rcd.x = -(float)((int)((GetView().x * LOOKAT_SCREEN_X + rcd.w) * coef) % (int)rcd.w);
-	rcd.y = -GetView().y * coef;
+	rcd.w = view.w;
+	rcd.h = view.h;
+	rcd.x = -(float)((int)((view.x * LOOKAT_SCREEN_X + rcd.w) * coef) % (int)rcd.w);
+	rcd.y = -view.y * coef;
 	for (int i = 0; i < 2; ++i)
 	{
-		SDL_RenderTexture(GetRenderer(), texture, nullptr, &rcd);
+		SDL_RenderTexture(back, texture, nullptr, &rcd);
 		rcd.x += rcd.w;
 	}
 }

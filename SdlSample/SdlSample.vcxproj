@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="Controller.cpp" />
+    <ClCompile Include="EmptyTile.cpp" />
     <ClCompile Include="KeyboardController.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="PlanarLevel.cpp" />
@@ -155,17 +156,28 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="RotativeReliefTile.cpp" />
+    <ClCompile Include="RotativeTile.cpp" />
+    <ClCompile Include="Tile.cpp" />
+    <ClCompile Include="PlanarTile.cpp" />
+    <ClCompile Include="TileSheet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h" />
     <ClInclude Include="Controller.h" />
+    <ClInclude Include="EmptyTile.h" />
     <ClInclude Include="KeyboardController.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="PlanarLevel.h" />
     <ClInclude Include="RotativeLevel.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="RotativeReliefTile.h" />
+    <ClInclude Include="RotativeTile.h" />
     <ClInclude Include="Settings.h" />
+    <ClInclude Include="Tile.h" />
+    <ClInclude Include="PlanarTile.h" />
+    <ClInclude Include="TileSheet.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
