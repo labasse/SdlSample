@@ -40,9 +40,15 @@ public:
 	static const SDL_Point SOUTHWEST;
 	static const SDL_Point SOUTHEAST;
 protected:
+	struct LoadContext {
+		Tile* previous = nullptr;
+	} defaultLoadContext;
+
 	struct TileGenerator {
-		virtual Tile* NewTile() = 0;
+		virtual Tile* NewTile(size_t col, size_t row, LoadContext& context) = 0;
 	};
+	virtual LoadContext& GetLineLoadContext(size_t row, const char *line);
+
 	void RegisterTileType(char symbol, TileGenerator* gen);
 	inline void RegisterEmptyTile(char symbol) { RegisterTileType(symbol, &emptyGen); }
 
@@ -51,7 +57,7 @@ protected:
 	inline const Parallax&  GetParallax () const { return parallax; }
 private:
 	struct EmptyTileGen : public TileGenerator {
-		Tile* NewTile() override { return EmptyTile::GetInstance(); }
+		Tile* NewTile(size_t, size_t, LoadContext&) override { return EmptyTile::GetInstance(); }
 	} emptyGen;
 	TileSheet tilesheet;
 	const Parallax &parallax;

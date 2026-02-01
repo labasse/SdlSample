@@ -27,6 +27,7 @@
       <Filter>TileTypes</Filter>
     </ClCompile>
     <ClCompile Include="Parallax.cpp" />
+    <ClCompile Include="DarkBackTileDecorator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h" />
@@ -55,6 +56,7 @@
       <Filter>TileTypes</Filter>
     </ClInclude>
     <ClInclude Include="Parallax.h" />
+    <ClInclude Include="DarkBackTileDecorator.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="TileTypes">

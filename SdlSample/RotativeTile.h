@@ -24,9 +24,10 @@ public:
 	///  		0 -- 1
 	///    	   //    \\
 	///        3 ---- 2
-	virtual void Render(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const;
+	virtual void RenderFront(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const;
+	virtual void RenderBack (const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const;
 private:
-	size_t tileIndex;	
+	size_t tileIndex;
 };
 
 #endif // _ROTATIVE_TILE_H_

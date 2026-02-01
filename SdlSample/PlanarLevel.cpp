@@ -50,7 +50,7 @@ PlanarLevel::TileGen::TileGen(char symbol, int tileIndex, int flags, int freqAlt
 {
 }
 
-Tile* PlanarLevel::TileGen::NewTile()
+Tile* PlanarLevel::TileGen::NewTile(size_t, size_t, LoadContext&)
 {
 	return (freqAlt == 0 || (rand() % freqAlt)) ? &tileInstance : &tileInstanceAlt;
 }
@@ -63,7 +63,7 @@ PlanarLevel::PlanarLevel(SDL_Texture* tilesheet, const Parallax& parallax) :
 	RegisterEmptyTile(CHAR_FINISH);
 	for (auto& gen : Predefined)
 	{
-		RegisterTileType(gen.GetSymbol(), &gen);
+		RegisterTileType(gen.symbol, &gen);
 	}
 }
 

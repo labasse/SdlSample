@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="Controller.cpp" />
+    <ClCompile Include="DarkBackTileDecorator.cpp" />
     <ClCompile Include="EmptyTile.cpp" />
     <ClCompile Include="KeyboardController.cpp" />
     <ClCompile Include="Level.cpp" />
@@ -166,6 +167,7 @@
   <ItemGroup>
     <ClInclude Include="Character.h" />
     <ClInclude Include="Controller.h" />
+    <ClInclude Include="DarkBackTileDecorator.h" />
     <ClInclude Include="EmptyTile.h" />
     <ClInclude Include="KeyboardController.h" />
     <ClInclude Include="Level.h" />

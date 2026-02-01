@@ -17,21 +17,23 @@ public:
 
 	void Normalize(float& x, float& y) const override;
 private:
+	struct RotativeLoadContext : public LoadContext {
+		bool darkBack;
+	} loadContext;
 	struct TileGen : public TileGenerator {
 		TileGen(char symbol, int tileIndex, int flags = 0);
 
-		Tile* NewTile() override;
+		Tile* NewTile(size_t, size_t, LoadContext&) override;
 
-		inline char GetSymbol() const { return symbol; }
-	private:
 		char symbol;
+	private:
 		RotativeTile tileInstance;
 		RotativeReliefTile tileRelief;
 	};
 
+	LoadContext& GetLineLoadContext(size_t row, const char* line) override;
+
 	void DrawLevelColumn(const Renderer& renderer, size_t col) const;
-//	void DrawTile	 (const Renderer& renderer, size_t row, float offsetX, float width, int tileIndex) const;
-//	void DrawPlatform(const Renderer& renderer, size_t col, size_t row) const;
 
 	inline void NextTileSource(SDL_FRect& rcsNext, const SDL_FRect& rcs, float width) const {
 		rcsNext.x = rcs.x + rcs.w;

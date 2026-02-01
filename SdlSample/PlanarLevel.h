@@ -17,11 +17,10 @@ protected:
 	struct TileGen : public TileGenerator {
 		TileGen(char symbol, int tileIndex, int flags = 0, int freqAlt=0);
 
-		Tile* NewTile() override;
-
-		inline char GetSymbol() const { return symbol; }
-	private:	
+		Tile* NewTile(size_t col, size_t row, LoadContext& context) override;
+	
 		char symbol;
+	private:
 		int freqAlt;
 		PlanarTile tileInstance;
 		PlanarTile tileInstanceAlt;

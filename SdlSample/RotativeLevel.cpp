@@ -54,7 +54,7 @@ RotativeLevel::RotativeLevel(SDL_Texture* tilesheet, const Parallax& parallax) :
 	RegisterEmptyTile(CHAR_FINISH);
 	for (auto& gen : Predefined)
 	{
-		RegisterTileType(gen.GetSymbol(), &gen);
+		RegisterTileType(gen.symbol, &gen);
 	}
 }
 
@@ -65,7 +65,13 @@ RotativeLevel::TileGen::TileGen(char symbol, int tileIndex, int flags) :
 {
 }
 
-Tile* RotativeLevel::TileGen::NewTile()
+Level::LoadContext& RotativeLevel::GetLineLoadContext(size_t row, const char* line)
+{
+	loadContext.darkBack = strchr(line, CHAR_EMPTY) == nullptr;
+	return loadContext;
+}
+
+Tile* RotativeLevel::TileGen::NewTile(size_t col, size_t row, LoadContext& context)
 {
 	return tileInstance.Is(TILEFLAG_ROTATIVE_RELIEF) ? &tileRelief : &tileInstance;
 }
@@ -77,12 +83,8 @@ void RotativeLevel::DrawLevelColumn(const Renderer& renderer, size_t col) const
 	float angle = (float)(2. * M_PI / (double)CIRCUMFERENCE_TILECOUNT);
 	float s0 = sinf((col - lookAtX) * angle);
 	float s1 = sinf((col + 1.f - lookAtX) * angle);
-	float offsets[4] = {
-		s0* RADIUS0,
-		s1* RADIUS0,
-		s1* RADIUS1,
-		s0* RADIUS1
-	};
+	float offsets[] { s0* RADIUS0, s1* RADIUS0, s1* RADIUS1, s0* RADIUS1 };
+	auto render = s0 < s1 ? &RotativeTile::RenderFront : &RotativeTile::RenderBack;
 
 	for (size_t row = 0; row < (int)GetHeight(); ++row)
 	{
@@ -90,9 +92,8 @@ void RotativeLevel::DrawLevelColumn(const Renderer& renderer, size_t col) const
 
 		if (tile->Is(TILEFLAG_ROTATIVE))
 		{
-			static_cast<const RotativeTile*>(tile)->Render(
-				renderer, GetTileSheet(), 
-				(float)row, offsets
+			(static_cast<const RotativeTile*>(tile)->*render)(
+				renderer, GetTileSheet(), (float)row, offsets
 			);
 		}
 	}

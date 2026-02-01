@@ -39,20 +39,30 @@ void Level::Load(const char* map[])
 	width = strlen(map[0]);
 	for (auto row = map; *row != nullptr; ++row, ++height) {
 		auto& line = tiles.emplace_back();
+		auto& context = GetLineLoadContext(height, *row);
+		size_t col = 0;
 
 		line.reserve(width);
 		ASSERT(width == strlen(*row));
-		for (const char* p = *row; *p; ++p) {
+		for (const char* p = *row; *p; ++p, ++col) {
 			if (*p == CHAR_START)
 			{
-				startCol = (size_t)(p - *row);
+				startCol = col;
 				startRow = height;
 			}
 			ASSERT(genByChar[*p]);
-			line.push_back(genByChar[*p]->NewTile());
+			line.push_back(
+				context.previous = genByChar[*p]->NewTile(col, height, context)
+			);
 		}
 	}
 }
+
+Level::LoadContext& Level::GetLineLoadContext(size_t row, const char* line)
+{
+	return defaultLoadContext;
+}
+
 
 void Level::RegisterTileType(const char symbol, TileGenerator* gen)
 {

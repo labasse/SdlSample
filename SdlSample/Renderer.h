@@ -11,8 +11,8 @@ class Renderer
 public:
 	Renderer(
 		SDL_Renderer* back, 
-		int viewWidth, int viewHeight,
-		int pixelsPerWorldUnit);
+		size_t viewWidth, size_t viewHeight,
+		size_t pixelsPerWorldUnit);
 
 	void BeginRender(float lookAtWorldX, float lookAtWorldY);
 	void EndRender();
@@ -20,7 +20,7 @@ public:
 	void GetVisibleArea(SDL_Rect& worldRect) const;
 
 	void RenderTile		  (SDL_Texture* texture, SDL_FRect src, float worldX, float worldY) const;
-	void RenderTileScaledX(SDL_Texture* texture, SDL_FRect src, float dxFromLookAt, float worldY, float widthX) const;
+	void RenderTileScaledX(SDL_Texture* texture, SDL_FRect src, float dxFromLookAtMin, float dxFromLookAtMax, float worldY) const;
 
 	void RenderAlignedTileRect(float col, float row) const;
 	void RenderParallaxLayer(SDL_Texture* texture, float centerWorldX, float angleRatio, float layerCoef, float layerCirc, bool repeatable) const;
@@ -32,7 +32,7 @@ public:
 private:
 	SDL_Renderer* back;
 	SDL_FPoint lookAtWorld;
-	SDL_FRect view;
+	float width, height;
 	float pixelsPerWorldUnit;
 };
 

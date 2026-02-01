@@ -4,11 +4,12 @@
 #define VISIBLE_AREA_COMPLETION 2.f
 #define PARALLAX_MAX_Y 10.f
 
-Renderer::Renderer(SDL_Renderer* back, int viewWidth, int viewHeight, int pixelsPerWorldUnit) : 
+Renderer::Renderer(SDL_Renderer* back, size_t viewWidth, size_t viewHeight, size_t pixelsPerWorldUnit) :
 	back(back),
 	lookAtWorld({ 0.f, 0.f }),
-	view({ 0.0f, 0.0f, (float)viewWidth, (float)viewHeight }),
-	pixelsPerWorldUnit((float)pixelsPerWorldUnit)
+	width (static_cast<float>(viewWidth)), 
+	height(static_cast<float>(viewHeight)),
+	pixelsPerWorldUnit(static_cast<float>(pixelsPerWorldUnit))
 { }
 
 void Renderer::BeginRender(float lookAtWorldX, float lookAtWorldY)
@@ -24,17 +25,17 @@ void Renderer::EndRender()
 
 void Renderer::GetVisibleArea(SDL_Rect& worldRect) const
 {
-	worldRect.x = (int)(lookAtWorld.x - view.w * LOOKAT_SCREEN_X / pixelsPerWorldUnit);
-	worldRect.y = (int)(lookAtWorld.y - view.h * LOOKAT_SCREEN_Y / pixelsPerWorldUnit);
-	worldRect.w = (int)(view.w / pixelsPerWorldUnit + VISIBLE_AREA_COMPLETION);
-	worldRect.h = (int)(view.h / pixelsPerWorldUnit + VISIBLE_AREA_COMPLETION);
+	worldRect.x = static_cast<int>(lookAtWorld.x - width  * LOOKAT_SCREEN_X / pixelsPerWorldUnit);
+	worldRect.y = static_cast<int>(lookAtWorld.y - height * LOOKAT_SCREEN_Y / pixelsPerWorldUnit);
+	worldRect.w = static_cast<int>(width  / pixelsPerWorldUnit + VISIBLE_AREA_COMPLETION);
+	worldRect.h = static_cast<int>(height / pixelsPerWorldUnit + VISIBLE_AREA_COMPLETION);
 }
 
 void Renderer::RenderAlignedTileRect(float col, float row) const
 {
 	SDL_FRect dstRect {	
-		((float)(int)col - lookAtWorld.x) * pixelsPerWorldUnit + view.w * LOOKAT_SCREEN_X, 
-		((float)(int)row - lookAtWorld.y) * pixelsPerWorldUnit + view.h * LOOKAT_SCREEN_Y,
+		((float)(int)col - lookAtWorld.x) * pixelsPerWorldUnit + width  * LOOKAT_SCREEN_X, 
+		((float)(int)row - lookAtWorld.y) * pixelsPerWorldUnit + height * LOOKAT_SCREEN_Y,
 		pixelsPerWorldUnit, pixelsPerWorldUnit
 	};
 	SDL_SetRenderDrawColor(back, 0, 255, 0, 255);
@@ -44,19 +45,19 @@ void Renderer::RenderAlignedTileRect(float col, float row) const
 void Renderer::RenderTile(SDL_Texture* texture, SDL_FRect src, float worldX, float worldY) const
 {
 	SDL_FRect dst{
-		(worldX - lookAtWorld.x) * pixelsPerWorldUnit + view.w * LOOKAT_SCREEN_X,
-		(worldY - lookAtWorld.y) * pixelsPerWorldUnit + view.h * LOOKAT_SCREEN_Y,
+		(worldX - lookAtWorld.x) * pixelsPerWorldUnit + width  * LOOKAT_SCREEN_X,
+		(worldY - lookAtWorld.y) * pixelsPerWorldUnit + height * LOOKAT_SCREEN_Y,
 		src.w, src.h
 	};
 	SDL_RenderTexture(back, texture, &src, &dst);
 }
 
-void Renderer::RenderTileScaledX(SDL_Texture* texture, SDL_FRect src, float dxFromLookAt, float worldY, float widthX) const
+void Renderer::RenderTileScaledX(SDL_Texture* texture, SDL_FRect src, float dxFromLookAtMin, float dxFromLookAtMax, float worldY) const
 {
 	SDL_FRect dst = {
-		view.w * LOOKAT_SCREEN_X + dxFromLookAt,
-		(worldY - lookAtWorld.y) * pixelsPerWorldUnit + view.h * LOOKAT_SCREEN_Y,
-		widthX, src.h
+		width * LOOKAT_SCREEN_X + dxFromLookAtMin,
+		(worldY - lookAtWorld.y) * pixelsPerWorldUnit + height * LOOKAT_SCREEN_Y,
+		dxFromLookAtMax - dxFromLookAtMin, src.h
 	};
 	SDL_RenderTexture(back, texture, &src, &dst);
 }
@@ -66,15 +67,15 @@ void Renderer::RenderParallaxLayer(SDL_Texture* texture, float centerWorldX, flo
 	ASSERT(centerWorldX >= 0);
 	ASSERT(layerCoef >= 0);
 	ASSERT(angleRatio > 0);
-	size_t w = (size_t)view.w;
+	size_t w = (size_t)width;
 	float pixelsCoef = pixelsPerWorldUnit * layerCoef;
 	size_t planarShift = static_cast<size_t>(centerWorldX * pixelsCoef);
-	size_t rotateShift = static_cast<size_t>(angleRatio * layerCirc * view.w);
-	size_t modulo = repeatX ? w : static_cast<size_t>(layerCirc * view.w);
+	size_t rotateShift = static_cast<size_t>(angleRatio * layerCirc * width);
+	size_t modulo = repeatX ? w : static_cast<size_t>(layerCirc * width);
 	SDL_FRect rcd {
 		- static_cast<float>((planarShift + rotateShift) % modulo),
 		(PARALLAX_MAX_Y - lookAtWorld.y) * pixelsCoef,
-		view.w, view.h
+		width, height
 	};
 	int repeat = repeatX || rotateShift >= (layerCirc-1) ? 2 : 1;
 

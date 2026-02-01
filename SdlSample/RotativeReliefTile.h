@@ -10,8 +10,11 @@ class RotativeReliefTile : public RotativeTile
 public:
 	RotativeReliefTile(int tileIndex, int flags);
 
-	void Render(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const override;
+	void RenderFront(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const override;
+	void RenderBack (const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const override;
 private:
+	void RenderRelief(const Renderer& renderer, const TileSheet& sheet, size_t firstX, float row, float x[4]) const;
+
 	size_t tileRelief;
 };
 
