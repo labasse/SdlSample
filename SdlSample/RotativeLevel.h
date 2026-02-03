@@ -4,6 +4,7 @@
 #include "Level.h"
 #include "RotativeTile.h"
 #include "RotativeReliefTile.h"
+#include "DarkBackDecorator.h"
 
 class RotativeLevel : public Level
 {
@@ -18,17 +19,19 @@ public:
 	void Normalize(float& x, float& y) const override;
 private:
 	struct RotativeLoadContext : public LoadContext {
-		bool darkBack;
+		bool darkBack = true;
 	} loadContext;
 	struct TileGen : public TileGenerator {
 		TileGen(char symbol, int tileIndex, int flags = 0);
 
+		void OnRegisteredBy(const Level& level) override;
 		Tile* NewTile(size_t, size_t, LoadContext&) override;
 
 		char symbol;
 	private:
-		RotativeTile tileInstance;
-		RotativeReliefTile tileRelief;
+		RotativeTile		tileInstance;
+		RotativeReliefTile	tileRelief;
+		DarkBackDecorator	tileDarkBack;
 	};
 
 	LoadContext& GetLineLoadContext(size_t row, const char* line) override;

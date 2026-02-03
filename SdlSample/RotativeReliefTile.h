@@ -10,12 +10,16 @@ class RotativeReliefTile : public RotativeTile
 public:
 	RotativeReliefTile(int tileIndex, int flags);
 
-	void RenderFront(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const override;
-	void RenderBack (const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const override;
+	void Render(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const override;
+
+	void PreCalcTileRects(const TileSheet& sheet) override;
 private:
 	void RenderRelief(const Renderer& renderer, const TileSheet& sheet, size_t firstX, float row, float x[4]) const;
 
-	size_t tileRelief;
+	int reliefIndex;
+	SDL_FRect rcFace;
+	SDL_FRect rcSide;
+	SDL_FRect rcBack;
 };
 
 #endif // _ROTATIVE_PLATFORM_TILE_H_

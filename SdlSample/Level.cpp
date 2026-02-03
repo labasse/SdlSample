@@ -13,8 +13,9 @@ const SDL_Point Level::NORTHEAST = {  1, -1 };
 const SDL_Point Level::SOUTHWEST = { -1,  1 };
 const SDL_Point Level::SOUTHEAST = {  1,  1 };
 
-Level::Level(SDL_Texture* tilesheet, const Parallax& parallax) : 
-	tilesheet(tilesheet, LEVEL_TILE_SIZE, LEVEL_TILE_COLUMNS), 
+Level::Level(SDL_Texture* tilesheetTx, const Parallax& parallax) : 
+	tilesheet(tilesheetTx, LEVEL_TILE_SIZE, LEVEL_TILE_COLUMNS),
+	defaultLoadContext{ nullptr },
 	parallax(parallax),
 	genByChar(0x7f, nullptr),
 	width(SIZE_MAX),
@@ -63,10 +64,10 @@ Level::LoadContext& Level::GetLineLoadContext(size_t row, const char* line)
 	return defaultLoadContext;
 }
 
-
 void Level::RegisterTileType(const char symbol, TileGenerator* gen)
 {
 	ASSERT(symbol >= 0 && symbol < 0x7f);
 	ASSERT(gen && genByChar[symbol] == nullptr);
 	genByChar[(size_t)symbol] = gen;
+	gen->OnRegisteredBy(*this);
 }

@@ -50,6 +50,12 @@ PlanarLevel::TileGen::TileGen(char symbol, int tileIndex, int flags, int freqAlt
 {
 }
 
+void PlanarLevel::TileGen::OnRegisteredBy(const Level& level)
+{
+	tileInstance	.PreCalcTileRects(level.GetTileSheet());
+	tileInstanceAlt	.PreCalcTileRects(level.GetTileSheet());
+}
+
 Tile* PlanarLevel::TileGen::NewTile(size_t, size_t, LoadContext&)
 {
 	return (freqAlt == 0 || (rand() % freqAlt)) ? &tileInstance : &tileInstanceAlt;
@@ -76,19 +82,18 @@ void PlanarLevel::Render(const Renderer& renderer) const
 
 	size_t lastcol = std::min(GetWidth (), (size_t)(rcArea.x + rcArea.w));
 	size_t lastrow = std::min(GetHeight(), (size_t)(rcArea.y + rcArea.h));
+	auto tilesheetTx = GetTileSheet().GetTexture();
 
-	for (int row = std::max(0, rcArea.y); row < lastrow; ++row) {
-		for (int col = std::max(0, rcArea.x); col < lastcol; ++col) {
+	for (size_t row = std::max(0, rcArea.y); row < lastrow; ++row) {
+		for (size_t col = std::max(0, rcArea.x); col < lastcol; ++col) {
 			auto tile = GetTile(col, row);
 
 			if (tile->Is(TILEFLAG_PLANAR)){
-				auto sheet = GetTileSheet();
-				auto index = static_cast<const PlanarTile*>(tile)->GetTileIndex();
-
 				renderer.RenderTile(
-					sheet.GetTexture(),	
-					sheet.FromTileIndex(index), 
-					(float)col, (float)row
+					tilesheetTx, 
+					static_cast<const PlanarTile*>(tile)->GetTileRect(),
+					static_cast<float>(col), 
+					static_cast<float>(row)
 				);
 			}
 		}

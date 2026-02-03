@@ -42,7 +42,7 @@ void Renderer::RenderAlignedTileRect(float col, float row) const
 	SDL_RenderRect(back, &dstRect);
 }
 
-void Renderer::RenderTile(SDL_Texture* texture, SDL_FRect src, float worldX, float worldY) const
+void Renderer::RenderTile(SDL_Texture* texture, const SDL_FRect& src, float worldX, float worldY) const
 {
 	SDL_FRect dst{
 		(worldX - lookAtWorld.x) * pixelsPerWorldUnit + width  * LOOKAT_SCREEN_X,
@@ -52,14 +52,19 @@ void Renderer::RenderTile(SDL_Texture* texture, SDL_FRect src, float worldX, flo
 	SDL_RenderTexture(back, texture, &src, &dst);
 }
 
-void Renderer::RenderTileScaledX(SDL_Texture* texture, SDL_FRect src, float dxFromLookAtMin, float dxFromLookAtMax, float worldY) const
+void Renderer::RenderTileScaledX(SDL_Texture* texture, const SDL_FRect& src, float dxFromLookAtMin, float dxFromLookAtMax, float worldY, bool flip) const
 {
-	SDL_FRect dst = {
-		width * LOOKAT_SCREEN_X + dxFromLookAtMin,
-		(worldY - lookAtWorld.y) * pixelsPerWorldUnit + height * LOOKAT_SCREEN_Y,
-		dxFromLookAtMax - dxFromLookAtMin, src.h
-	};
-	SDL_RenderTexture(back, texture, &src, &dst);
+	float tileWidth = dxFromLookAtMax - dxFromLookAtMin;
+
+	if(tileWidth >= .0f)
+	{
+		SDL_FRect dst = {
+			width * LOOKAT_SCREEN_X + dxFromLookAtMin,
+			(worldY - lookAtWorld.y) * pixelsPerWorldUnit + height * LOOKAT_SCREEN_Y,
+			tileWidth, src.h
+		};
+		SDL_RenderTextureRotated(back, texture, &src, &dst, 0.f, nullptr, flip ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+	}
 }
 
 void Renderer::RenderParallaxLayer(SDL_Texture* texture, float centerWorldX, float angleRatio, float layerCoef, float layerCirc, bool repeatX) const

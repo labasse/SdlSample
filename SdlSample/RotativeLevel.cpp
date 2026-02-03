@@ -7,17 +7,14 @@
 #include "RotativeLevel.h"
 
 #define CIRCUMFERENCE_TILECOUNT 36
-#define RADIUS0	367.f
-#define RADIUS1 415.f
-
-#define PLATFORM_FACE_WIDTH 72.f
-#define PLATFORM_SIDE_WIDTH 48.f
+#define RADIUS0	367.0f
+#define RADIUS1 421.2f
 
 const char *RotativeLevel::Level1[] = {
 	"                                    ",
-	"           |===|                    ",
-	"         |==/~\\===|                 ",
-	"         |OO[ ]OOO======|           ",
+	"         |=====|                    ",
+	"-----    |==/~\\===|             ----",
+	"         |OO[ ]OOO======|  ---      ",
 	"         |=====HOOOO()OO|     ||||||",
 	"|        |OOOOOHOO========|   |OOOO=",
 	"|||   |||=OO|||HOOOOOOOO|||   |||OOO",
@@ -36,14 +33,15 @@ RotativeLevel::TileGen RotativeLevel::Predefined[] = {
 	{ CHAR_LADDER     , TILEINDEX_LADDER     , TILEFLAG_CLIMBABLE },
 	{ CHAR_START	  , TILEINDEX_BGSTONE	 },
 	{ CHAR_BGSTONE    , TILEINDEX_BGSTONE	 },
-	{ CHAR_WINDOW0    , TILEINDEX_WND0		 , TILEFLAG_SPECIALBCK},
-	{ CHAR_WINDOW1    , TILEINDEX_WND1		 , TILEFLAG_SPECIALBCK},
-	{ CHAR_DOOR0      , TILEINDEX_DOOR0		 },
+	{ CHAR_WINDOW0    , TILEINDEX_WND0		 , TILEFLAG_SPECIALBCK|TILEFLAG_ASYMMETRIC},
+	{ CHAR_WINDOW1    , TILEINDEX_WND1		 , TILEFLAG_SPECIALBCK|TILEFLAG_ASYMMETRIC},
+	{ CHAR_DOOR0      , TILEINDEX_DOOR0		 , TILEFLAG_ASYMMETRIC},
 	{ CHAR_DOOR1      , TILEINDEX_DOOR1		 , TILEFLAG_SPECIALBCK},
-	{ CHAR_DOOR2      , TILEINDEX_DOOR2		 },
-	{ CHAR_DOOR3      , TILEINDEX_DOOR3		 },
-	{ CHAR_DOOR4      , TILEINDEX_DOOR4		 },
-	{ CHAR_STONEFLOOR , TILEINDEX_RELIEF_STONEFLOOR , TILEFLAG_PLATFORM },
+	{ CHAR_DOOR2      , TILEINDEX_DOOR2		 , TILEFLAG_ASYMMETRIC},
+	{ CHAR_DOOR3      , TILEINDEX_DOOR3		 , TILEFLAG_ASYMMETRIC},
+	{ CHAR_DOOR4      , TILEINDEX_DOOR4		 , TILEFLAG_ASYMMETRIC},
+	{ CHAR_WOODENFLOOR, TILEINDEX_RELIEF_STONEFLOOR , TILEFLAG_PLATFORM },
+	{ CHAR_STONEFLOOR , TILEINDEX_RELIEF_STONEFLOOR , TILEFLAG_PLATFORM|TILEFLAG_DRAWBGTILE },
 	{ CHAR_STONEWALL  , TILEINDEX_RELIEF_STONEWALL  , TILEFLAG_SOLID    }
 };
 
@@ -61,18 +59,34 @@ RotativeLevel::RotativeLevel(SDL_Texture* tilesheet, const Parallax& parallax) :
 RotativeLevel::TileGen::TileGen(char symbol, int tileIndex, int flags) :
 	symbol(symbol),
 	tileInstance(tileIndex, flags),
-	tileRelief(tileIndex, flags)
-{
-}
+	tileRelief	(tileIndex, flags),
+	tileDarkBack(
+		(flags&TILEFLAG_ROTATIVE_RELIEF) ? tileRelief : tileInstance, 
+		LEVEL_TILE_COLUMNS, flags
+	)
+{ }
 
 Level::LoadContext& RotativeLevel::GetLineLoadContext(size_t row, const char* line)
 {
-	loadContext.darkBack = strchr(line, CHAR_EMPTY) == nullptr;
+	loadContext.darkBack = strstr(line, "  ") == nullptr;
 	return loadContext;
+}
+
+void RotativeLevel::TileGen::OnRegisteredBy(const Level& level)
+{
+	tileInstance	.PreCalcTileRects(level.GetTileSheet());
+	tileRelief		.PreCalcTileRects(level.GetTileSheet());
+	tileDarkBack	.PreCalcTileRects(level.GetTileSheet());
 }
 
 Tile* RotativeLevel::TileGen::NewTile(size_t col, size_t row, LoadContext& context)
 {
+	auto& rotContext = static_cast<RotativeLevel::RotativeLoadContext&>(context);
+	
+	if (rotContext.darkBack)
+	{
+		return &tileDarkBack;
+	}
 	return tileInstance.Is(TILEFLAG_ROTATIVE_RELIEF) ? &tileRelief : &tileInstance;
 }
 
@@ -84,7 +98,6 @@ void RotativeLevel::DrawLevelColumn(const Renderer& renderer, size_t col) const
 	float s0 = sinf((col - lookAtX) * angle);
 	float s1 = sinf((col + 1.f - lookAtX) * angle);
 	float offsets[] { s0* RADIUS0, s1* RADIUS0, s1* RADIUS1, s0* RADIUS1 };
-	auto render = s0 < s1 ? &RotativeTile::RenderFront : &RotativeTile::RenderBack;
 
 	for (size_t row = 0; row < (int)GetHeight(); ++row)
 	{
@@ -92,7 +105,7 @@ void RotativeLevel::DrawLevelColumn(const Renderer& renderer, size_t col) const
 
 		if (tile->Is(TILEFLAG_ROTATIVE))
 		{
-			(static_cast<const RotativeTile*>(tile)->*render)(
+			static_cast<const RotativeTile*>(tile)->Render(
 				renderer, GetTileSheet(), (float)row, offsets
 			);
 		}

@@ -1,43 +1,34 @@
 #include "RotativeReliefTile.h"
 
-#define SIZE_FACE	72
-#define SIZE_SIDE	48
+#define SIZE_FACE	74
+#define SIZE_SIDE	54
 
 RotativeReliefTile::RotativeReliefTile(int tileIndex, int flags) :
 	RotativeTile(TILEINDEX_BGSTONE, flags),
-	tileRelief(tileIndex)
+	reliefIndex(tileIndex),
+	rcFace(),
+	rcSide(),
+	rcBack()
 { }
 
-void RotativeReliefTile::RenderRelief(const Renderer& renderer, const TileSheet& sheet, size_t firstX, float row, float x[4]) const
+void RotativeReliefTile::PreCalcTileRects(const TileSheet& sheet)
 {
-	auto srcSide = sheet.FromTileIndex(tileRelief, SIZE_SIDE, SIZE_FACE);
-
-	if (x[0] < x[3])
-		renderer.RenderTileScaledX(sheet.GetTexture(), srcSide, x[0], x[3], row);
-	if (x[2] < x[1])
-		renderer.RenderTileScaledX(sheet.GetTexture(), srcSide, x[2], x[1], row);
-	renderer.RenderTileScaledX(
-		sheet.GetTexture(),
-		sheet.FromTileIndex(tileRelief, SIZE_FACE, 0),
-		x[firstX], x[firstX - 1], row
-	);
+	RotativeTile::PreCalcTileRects(sheet);
+	rcFace = sheet.FromTileIndex(reliefIndex + 1, SIZE_FACE);
+	rcSide = sheet.FromTileIndex(reliefIndex + 1, SIZE_SIDE, SIZE_FACE);
+	rcBack = sheet.FromTileIndex(reliefIndex);
 }
 
-
-void RotativeReliefTile::RenderFront(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const
+void RotativeReliefTile::Render(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const
 {
-	if (Is(TILEFLAG_PLATFORM))
+	if (Is(TILEFLAG_DRAWBGTILE))
 	{
-		RotativeTile::RenderFront(renderer, sheet, row, x);
+		RotativeTile::Render(renderer, sheet, row, x);
 	}
-	RenderRelief(renderer, sheet, 3, row, x);
+	auto tx = sheet.GetTexture();
+
+	renderer.RenderTileScaledX(tx, rcSide, x[0], x[3], row);
+	renderer.RenderTileScaledX(tx, rcSide, x[2], x[1], row);
+	renderer.RenderTileScaledX(tx, rcFace, x[3], x[2], row);
+	renderer.RenderTileScaledX(tx, rcBack, x[1], x[0], row);
 }
-
-void RotativeReliefTile::RenderBack(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const
-{
-	if (Is(TILEFLAG_PLATFORM))
-	{
-		RotativeTile::RenderBack(renderer, sheet, row, x);
-	}
-	RenderRelief(renderer, sheet, 1, row, x);
-};

@@ -27,6 +27,8 @@ public:
 	inline size_t	GetWidth () const { return width; }
 	inline size_t	GetHeight() const { return height; }
 
+	inline const TileSheet& GetTileSheet() const { return tilesheet; }
+
 	virtual void Render(const Renderer& renderer) const = 0;
 	virtual void Normalize(float& x, float &y) const = 0;
 
@@ -45,6 +47,7 @@ protected:
 	} defaultLoadContext;
 
 	struct TileGenerator {
+		virtual void OnRegisteredBy(const Level& level) {}
 		virtual Tile* NewTile(size_t col, size_t row, LoadContext& context) = 0;
 	};
 	virtual LoadContext& GetLineLoadContext(size_t row, const char *line);
@@ -52,8 +55,6 @@ protected:
 	void RegisterTileType(char symbol, TileGenerator* gen);
 	inline void RegisterEmptyTile(char symbol) { RegisterTileType(symbol, &emptyGen); }
 
-	inline TileSheet&		GetTileSheet()		 { return tilesheet; }
-	inline const TileSheet& GetTileSheet() const { return tilesheet; }
 	inline const Parallax&  GetParallax () const { return parallax; }
 private:
 	struct EmptyTileGen : public TileGenerator {

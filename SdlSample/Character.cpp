@@ -251,9 +251,10 @@ Character::State Character::UpdateClimb(Uint64 time, const SDL_Point& dir, const
 void Character::Render(const Renderer &renderer)
 {
 	ASSERT(State::FIRST <= state && state < State::COUNT);
+	auto srcAnim = anims.FromAnim(Anims[(int)state], updateTime - stateStartTime);
+
 	renderer.RenderTile(
-		anims.GetTexture(), 
-		anims.FromAnim(Anims[(int)state], updateTime - stateStartTime), 
+		anims.GetTexture(), srcAnim, 
 		GetWorldX() - WORLD_OFFSETX, 
 		GetWorldY() - WORLD_OFFSETY
 	);

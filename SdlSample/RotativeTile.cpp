@@ -1,19 +1,20 @@
 #include "RotativeTile.h"
 
-RotativeTile::RotativeTile(int tileIndex, int flags) :
+RotativeTile::RotativeTile(size_t tileIndex, int flags) :
 	Tile(flags | TILEFLAG_ROTATIVE),
-	tileIndex(tileIndex)
+	tileIndex(tileIndex),
+	rc()
 { }
 
-void RotativeTile::RenderFront(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const
+void RotativeTile::PreCalcTileRects(const TileSheet& sheet)
 {
-	renderer.RenderTileScaledX(sheet.GetTexture(), sheet.FromTileIndex(tileIndex), x[0], x[1], row);
+	rc = sheet.FromTileIndex(tileIndex);
 }
 
-void RotativeTile::RenderBack(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const
+void RotativeTile::Render(const Renderer& renderer, const TileSheet& sheet, float row, float x[4]) const
 {
-	size_t index = Is(TILEFLAG_SPECIALBCK)
-		? tileIndex + sheet.GetColumnNum()
-		: TILEINDEX_TILE_BCK;
-	renderer.RenderTileScaledX(sheet.GetTexture(), sheet.FromTileIndex(index), x[1], x[0], row);
+	bool front;
+	int min = (front = ShouldRenderFront(x)) ? 0 : 1;
+
+	renderer.RenderTileScaledX(sheet.GetTexture(), rc, x[min], x[1 - min], row, !front && Is(TILEFLAG_ASYMMETRIC));
 }

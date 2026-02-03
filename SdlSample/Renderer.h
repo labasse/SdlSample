@@ -19,8 +19,8 @@ public:
 
 	void GetVisibleArea(SDL_Rect& worldRect) const;
 
-	void RenderTile		  (SDL_Texture* texture, SDL_FRect src, float worldX, float worldY) const;
-	void RenderTileScaledX(SDL_Texture* texture, SDL_FRect src, float dxFromLookAtMin, float dxFromLookAtMax, float worldY) const;
+	void RenderTile		  (SDL_Texture* texture, const SDL_FRect &src, float worldX, float worldY) const;
+	void RenderTileScaledX(SDL_Texture* texture, const SDL_FRect &src, float dxFromLookAtMin, float dxFromLookAtMax, float worldY, bool flip=false) const;
 
 	void RenderAlignedTileRect(float col, float row) const;
 	void RenderParallaxLayer(SDL_Texture* texture, float centerWorldX, float angleRatio, float layerCoef, float layerCirc, bool repeatable) const;
